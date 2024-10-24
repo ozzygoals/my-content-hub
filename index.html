@@ -9,9 +9,9 @@
         form { margin-bottom: 20px; }
         input, select, button, textarea { display: block; margin: 10px 0; width: 300px; }
         #saved-content, #consumed-content { margin-top: 20px; }
-        .content-item { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+        .content-item { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; text-align: center; }
+        .content-item img { max-width: 150px; height: auto; margin-top: 10px; } /* Standard image size for all entries */
         .button-container { margin-top: 10px; }
-        img { max-width: 100%; height: auto; margin-top: 10px; } /* Ensure images fit within their container */
     </style>
 </head>
 <body>
@@ -146,9 +146,9 @@
                 return await fetchYouTubeMetadata(url);
             } else if (isAudibleUrl(url)) {
                 return await fetchAudibleMetadata(url);
+            } else {
+                return await fetchOtherContentMetadata(url); // New method for other content types
             }
-            // Add more else if statements for other content types as needed
-            return {};
         }
 
         function isYouTubeUrl(url) {
@@ -184,6 +184,14 @@
             return {
                 description: '', // Blank for Audible
                 image: 'https://play-lh.googleusercontent.com/JG7l65_C92nOlTxhPLhHPkYjXutvkPZF1XMv1QCkCwtozsJ0FGw1tj5-lWEbaFx77A' // Generic Audible image
+            };
+        }
+
+        async function fetchOtherContentMetadata(url) {
+            // Dummy implementation for other content types (e.g., streaming services, articles)
+            return {
+                description: '', // Optionally fetch descriptions for other content types
+                image: 'https://via.placeholder.com/150' // Placeholder image for other content types
             };
         }
 
