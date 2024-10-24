@@ -34,6 +34,7 @@
             cursor: pointer;
             font-weight: bold;
             color: #007bff;
+            text-decoration: underline;
         }
         .card-content {
             display: none;
@@ -132,7 +133,7 @@
             const createColumn = (contents) => {
                 return contents.map((content, index) => `
                     <div class="content-card" id="card-${index}" draggable="true" ondragstart="drag(event, ${index})">
-                        <div class="card-title" onclick="toggleCard(${index})">${content.title}</div>
+                        <a class="card-title" href="${content.url}" target="_blank">${content.title}</a>
                         <div class="card-content">
                             <input type="text" value="${content.description || 'No description provided.'}" onblur="updateContent(${index}, 'description', this.value)" />
                             <input type="url" value="${content.url}" onblur="updateContent(${index}, 'url', this.value)" />
@@ -142,7 +143,6 @@
                                 <option value="Podcast" ${content.type === 'Podcast' ? 'selected' : ''}>Podcast</option>
                             </select>
                             <input type="text" value="${content.priority}" onblur="updateContent(${index}, 'priority', this.value)" />
-                            <button class="btn" onclick="editContent(${index})">Edit</button>
                             <button class="btn btn-delete" onclick="deleteContent(${index})">Delete</button>
                         </div>
                     </div>
@@ -151,23 +151,6 @@
 
             document.getElementById('unread-column').innerHTML = createColumn(unread);
             document.getElementById('read-column').innerHTML = createColumn(read);
-        }
-
-        // Toggle Card Display
-        function toggleCard(index) {
-            const cardContent = document.querySelector(`#card-${index} .card-content`);
-            const isVisible = cardContent.style.display === 'block';
-            cardContent.style.display = isVisible ? 'none' : 'block';
-        }
-
-        // Edit Content
-        function editContent(index) {
-            const card = document.getElementById(`card-${index}`);
-            const inputs = card.querySelectorAll('input, select');
-            inputs.forEach(input => {
-                input.removeAttribute('readonly');
-                input.style.border = '1px solid #007bff';
-            });
         }
 
         // Update Content
