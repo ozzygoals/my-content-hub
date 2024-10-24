@@ -11,6 +11,7 @@
         #saved-content, #consumed-content { margin-top: 20px; }
         .content-item { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
         .button-container { margin-top: 10px; }
+        img { max-width: 100%; height: auto; } /* Ensure images fit within their container */
     </style>
 </head>
 <body>
@@ -223,14 +224,15 @@
         }
 
         function markAsConsumed(index) {
-            consumedContent.push(savedContent[index]);
-            savedContent.splice(index, 1);
+            const content = savedContent[index];
+            consumedContent.push(content); // Add content to consumed
+            savedContent.splice(index, 1); // Remove from saved
             localStorage.setItem('savedContent', JSON.stringify(savedContent));
             localStorage.setItem('consumedContent', JSON.stringify(consumedContent));
-            displaySavedContent(); // Refresh saved content display
+            displaySavedContent(); // Refresh saved content
+            displayConsumedContent(); // Refresh consumed content
         }
 
-        // Display saved content on initial load
         displaySavedContent();
     </script>
 </body>
