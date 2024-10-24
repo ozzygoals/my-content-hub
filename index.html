@@ -114,8 +114,8 @@
     </form>
 
     <div class="filter-section">
-        <label for="filter-tags">Filter by Tags (comma-separated):</label>
-        <input type="text" id="filter-tags" oninput="filterContent()">
+        <label for="filter-search">Search (title, tags, description):</label>
+        <input type="text" id="filter-search" oninput="filterContent()">
     </div>
 
     <div class="content-columns">
@@ -137,9 +137,11 @@
             incompleteContent.innerHTML = '<h2>Incomplete</h2>';
             completeContent.innerHTML = '<h2>Complete</h2>';
 
-            const filter = document.getElementById('filter-tags').value.toLowerCase();
+            const searchTerm = document.getElementById('filter-search').value.toLowerCase();
             const filteredContent = savedContent.filter(item => {
-                return item.tags.some(tag => tag.toLowerCase().includes(filter));
+                return item.title.toLowerCase().includes(searchTerm) || 
+                       item.tags.some(tag => tag.toLowerCase().includes(searchTerm)) ||
+                       (item.description && item.description.toLowerCase().includes(searchTerm));
             });
 
             filteredContent.forEach((content, index) => {
@@ -190,7 +192,7 @@
             const priority = document.getElementById('content-priority').value;
             const type = document.getElementById('content-type').value;
 
-            // Add a field for URL (you may want to add a corresponding input in your form)
+            // Add a field for URL
             const url = prompt("Enter the URL for this content:");
 
             const contentItem = {
