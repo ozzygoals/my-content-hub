@@ -47,7 +47,7 @@
         <p>&copy; 2024 My Content Hub</p>
     </footer>
 </body>
-  <script>
+ <script>
     const form = document.getElementById('save-content');
     const contentList = document.getElementById('saved-content');
 
@@ -60,13 +60,26 @@
         const priority = document.getElementById('content-priority').value;
 
         const listItem = document.createElement('li');
-        listItem.innerHTML = `<a href="${url}" target="_blank">${title}</a> (Tags: ${tags.join(', ')}) - <strong>${priority}</strong>`;
+        listItem.innerHTML = `
+            <a href="${url}" target="_blank">${title}</a> (Tags: ${tags.join(', ')}) - <strong>${priority}</strong>
+            <button onclick="downloadContent('${url}', '${title}')">Download</button>
+        `;
         contentList.appendChild(listItem);
 
         // Clear the form
         form.reset();
     });
+
+    function downloadContent(url, title) {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = title || 'download';  // Fallback title
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 </script>
+
 
 
 
