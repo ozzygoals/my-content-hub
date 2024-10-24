@@ -37,6 +37,11 @@
         .section {
             margin-top: 20px;
         }
+        .link {
+            color: blue;
+            font-weight: bold;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
@@ -125,7 +130,7 @@
             const contentDiv = document.createElement('div');
             contentDiv.className = 'content-item';
             contentDiv.innerHTML = `
-                <h3>${content.title}</h3>
+                <h3><a href="${content.url}" target="_blank" class="link">${content.title}</a></h3>
                 <p><strong>Tags:</strong> ${content.tags.join(', ')}</p>
                 <p><strong>Priority:</strong> ${content.priority}</p>
                 <p><strong>Description:</strong> ${content.description || 'No description available.'}</p>
