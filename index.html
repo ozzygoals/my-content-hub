@@ -5,41 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Content Hub</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        /* Additional CSS for layout */
-        .content-entry {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            padding: 10px;
-            background: #f9f9f9;
-        }
-        .preview-frame {
-            width: 120px;
-            height: 90px;
-            margin-right: 10px;
-            overflow: hidden;
-            border-radius: 4px;
-            background-color: #eaeaea;
-        }
-        .preview-frame img {
-            width: 100%;
-            height: auto;
-        }
-        .content-details {
-            flex-grow: 1;
-        }
-        .content-tags {
-            margin: 5px 0;
-            font-size: 0.9em;
-            color: #555;
-        }
-        .priority-label {
-            font-weight: bold;
-            color: #ff5722; /* Orange color for priority */
-        }
-    </style>
 </head>
 <body>
     <header>
@@ -53,7 +18,7 @@
                 <input type="text" id="content-title" required>
                 
                 <label for="content-url">URL:</label>
-                <input type="url" id="content-url" required onblur="fetchPreview()">
+                <input type="url" id="content-url" required>
                 
                 <label for="content-tags">Tags (comma-separated):</label>
                 <input type="text" id="content-tags" placeholder="e.g. education, technology">
@@ -68,6 +33,7 @@
                 <button type="submit">Save Content</button>
             </form>
 
+            <!-- Add the search bar here -->
             <input type="text" id="search-bar" placeholder="Search content..." oninput="filterContent()">
 
             <div id="content-list">
@@ -90,12 +56,39 @@
     </footer>
     
     <script>
+        // Initialize an array to hold saved content
+        let savedContent = JSON.parse(localStorage.getItem('savedContent')) || [];
+
+        // Function to save content
+        function saveContent() {
+            const contentInput = document.getElementById('content-input');
+            const contentValue = contentInput.value.trim();
+
+            if (contentValue) {
+                savedContent.push(contentValue); // Add to the savedContent array
+                localStorage.setItem('savedContent', JSON.stringify(savedContent)); // Save to localStorage
+                contentInput.value = ''; // Clear the input field
+                displaySavedContent(); // Update displayed content
+            } else {
+                alert('Please enter a valid content link or title.');
+            }
+        }
+
+        // Function to display saved content
+        function displaySavedContent() {
+            const savedList = document.getElementById('saved-content');
+            savedList.innerHTML = ''; // Clear current list
+
+            savedContent.forEach((content) => {
+                const listItem = document.createElement('li');
+                listItem.textContent = content;
+                savedList.appendChild(listItem);
+            });
+        }
+
         const form = document.getElementById('save-content');
         const contentList = document.getElementById('saved-content');
         const recommendationsList = document.getElementById('recommended-content');
-
-        // Load saved content on page load
-        document.addEventListener('DOMContentLoaded', loadSavedContent);
 
         form.addEventListener('submit', function(event) {
             event.preventDefault();
@@ -105,75 +98,23 @@
             const tags = document.getElementById('content-tags').value.split(',').map(tag => tag.trim());
             const priority = document.getElementById('content-priority').value;
 
-            const contentData = {
-                title,
-                url,
-                tags,
-                priority,
-                description: generateDescription(title), // Generate description
-                image: getPreviewImage(url) // Fetch image
-            };
-
-            saveContentToLocal(contentData);
-            displayContent(contentData);
-            form.reset();
-        });
-
-        function fetchPreview() {
-            const url = document.getElementById('content-url').value;
-            document.getElementById('content-title').value = getTitleFromUrl(url);
-            document.getElementById('content-tags').value = getTagsFromUrl(url);
-        }
-
-        function getPreviewImage(url) {
-            // Placeholder logic for fetching preview image from URL
-            return 'https://via.placeholder.com/120'; // Replace with actual image fetching logic
-        }
-
-        function getTitleFromUrl(url) {
-            // Simulated logic to generate title from URL
-            return url.split('/').pop().replace(/[-_]/g, ' ').replace(/\..+$/, ''); // Simplified title
-        }
-
-        function getTagsFromUrl(url) {
-            // Simulated logic to generate tags from URL
-            return 'tag1, tag2'; // Update to extract real tags
-        }
-
-        function generateDescription(title) {
-            return `This is a brief description of ${title}. It summarizes the key points and value of the content.`;
-        }
-
-        function saveContentToLocal(content) {
-            let savedContents = JSON.parse(localStorage.getItem('savedContents')) || [];
-            savedContents.push(content);
-            localStorage.setItem('savedContents', JSON.stringify(savedContents));
-        }
-
-        function loadSavedContent() {
-            let savedContents = JSON.parse(localStorage.getItem('savedContents')) || [];
-            savedContents.forEach(content => {
-                displayContent(content);
-            });
-        }
-
-        function displayContent(content) {
             const listItem = document.createElement('li');
-            listItem.className = 'content-entry';
             listItem.innerHTML = `
-                <div class="preview-frame">
-                    <img src="${content.image}" alt="Preview">
-                </div>
-                <div class="content-details">
-                    <h4>${content.title}</h4>
-                    <div class="content-tags">Tags: ${content.tags.join(', ')}</div>
-                    <div class="priority-label">Priority: ${content.priority}</div>
-                    <p>${content.description}</p>
-                    <button onclick="downloadContent('${content.url}', '${content.title}')">Download</button>
-                </div>
+                <a href="${url}" target="_blank">${title}</a> (Tags: ${tags.join(', ')}) - <strong>${priority}</strong>
+                <button onclick="downloadContent('${url}', '${title}')">Download</button>
             `;
             contentList.appendChild(listItem);
-        }
+
+            // Update recommendations
+            updateRecommendations(tags, title);
+
+            // Clear the form
+            form.reset();
+
+            // Save to local storage
+            savedContent.push({ title, url, tags, priority });
+            localStorage.setItem('savedContent', JSON.stringify(savedContent));
+        });
 
         function downloadContent(url, title) {
             const link = document.createElement('a');
@@ -213,6 +154,9 @@
                 }
             }
         }
+
+        // Display saved content on page load
+        displaySavedContent();
     </script>
 </body>
 </html>
