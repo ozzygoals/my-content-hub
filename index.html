@@ -11,7 +11,7 @@
         <h1>Welcome to My Content Hub</h1>
     </header>
     <main>
-        <section id="content-form">
+ <section id="content-form">
     <h2>Save Your Content</h2>
     <form id="save-content">
         <label for="content-title">Title:</label>
@@ -20,12 +20,17 @@
         <label for="content-url">URL:</label>
         <input type="url" id="content-url" required>
         
+        <label for="content-tags">Tags (comma-separated):</label>
+        <input type="text" id="content-tags" placeholder="e.g. education, technology">
+        
         <button type="submit">Save Content</button>
     </form>
     <div id="content-list">
         <h3>Your Saved Content:</h3>
         <ul id="saved-content"></ul>
     </div>
+</section>
+
 </section>
 
         <p>This is where I will save and organize my content.</p>
@@ -43,14 +48,16 @@
         
         const title = document.getElementById('content-title').value;
         const url = document.getElementById('content-url').value;
+        const tags = document.getElementById('content-tags').value.split(',').map(tag => tag.trim());
 
         const listItem = document.createElement('li');
-        listItem.innerHTML = `<a href="${url}" target="_blank">${title}</a>`;
+        listItem.innerHTML = `<a href="${url}" target="_blank">${title}</a> (Tags: ${tags.join(', ')})`;
         contentList.appendChild(listItem);
 
         // Clear the form
         form.reset();
     });
 </script>
+
 
 </html>
