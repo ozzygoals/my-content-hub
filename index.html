@@ -141,6 +141,22 @@
             margin-bottom: 20px;
         }
 
+        .content-columns {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .column {
+            width: 48%;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-weight: bold;
+        }
+
     </style>
 </head>
 <body>
@@ -213,7 +229,7 @@
         </div>
 
         <h2>Saved Content</h2>
-        <div id="content-list"></div>
+        <div id="content-list" class="content-columns"></div>
     </div>
 
     <script>
@@ -265,38 +281,88 @@
             const unread = contents.filter(content => !content.consumed);
             const read = contents.filter(content => content.consumed);
 
-            [...unread, ...read].forEach((content, index) => {
-                const contentItem = document.createElement('div');
-                contentItem.classList.add('content-item');
-
-                contentItem.innerHTML = `
-                    <h3>${content.title}</h3>
-                    <button class="collapsible">Show Details</button>
-                    <div class="content">
-                        <p><strong>Description:</strong> <input type="text" value="${content.description}" onchange="editContent(${index}, 'description', this.value)"></p>
-                        <p><strong>Type:</strong> ${content.type}</p>
-                        <p><strong>URL:</strong> <input type="text" value="${content.url}" onchange="editContent(${index}, 'url', this.value)"></p>
-                        <p><strong>Priority:</strong> ${content.priority}</p>
-                        <button class="btn" onclick="toggleConsume(${index})">${content.consumed ? 'Mark as Unread' : 'Mark as Read'}</button>
-                        <button class="btn btn-delete" onclick="deleteContent(${index})">Delete</button>
+            const createColumn = (items) => {
+                return `
+                    <div class="column">
+                        ${items.map((content, index) => `
+                            <div class="content-item">
+                                <h3>${content.title}</h3>
+                                <button class="collapsible">Show Details</button>
+                                <div class="content">
+                                    <div class="header-row">
+                                        <span><strong>Type:</strong> ${content.type}</span>
+                                        <span><strong>Priority:</strong> ${content.priority}</span>
+                                    </div>
+                                    <p><strong>Description:</strong> <input type="text" value="${content.description}" onchange="editContent(${index}, 'description', this.value)"></p>
+                                    <p><strong>URL:</strong> <input type="text" value="${content.url}" onchange="editContent(${index}, 'url', this.value)"></p>
+                                    <button onclick="markAsRead(${index})">Mark as Read</button>
+                                    <button class="btn-delete" onclick="deleteContent(${index})">Delete</button>
+                                </div>
+                            </div>
+                        `).join('')}
                     </div>
                 `;
+            };
 
-                const collapsibleBtn = contentItem.querySelector('.collapsible');
-                const collapsibleContent = contentItem.querySelector('.content');
+            contentList.innerHTML = `
+                <div class="column">
+                    <h3>Unread</h3>
+                    ${createColumn(unread)}
+                </div>
+                <div class="column">
+                    <h3>Read</h3>
+                    ${createColumn(read)}
+                </div>
+            `;
 
-                collapsibleBtn.addEventListener('click', () => {
-                    collapsibleContent.classList.toggle('active');
-                    collapsibleBtn.classList.toggle('active');
+            // Attach collapsible functionality
+            const collapsibles = document.getElementsByClassName("collapsible");
+            for (let i = 0; i < collapsibles.length; i++) {
+                collapsibles[i].addEventListener("click", function() {
+                    this.classList.toggle("active");
+                    const content = this.nextElementSibling;
+                    if (content.style.display === "block") {
+                        content.style.display = "none";
+                    } else {
+                        content.style.display = "block";
+                    }
                 });
-
-                contentList.appendChild(contentItem);
-            });
+            }
         }
 
-        // Toggle consumed state
-        function toggleConsume(index) {
-            contentArray[index].consumed = !contentArray[index].consumed;
+        // Show notification
+        function showNotification() {
+            const notification = document.getElementById('notification');
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // Filter content
+        function filterContent() {
+            const filterTitle = document.getElementById('filter-title').value.toLowerCase();
+            const filterType = document.getElementById('filter-type').value;
+
+            const filteredContents = contentArray.filter(content => {
+                const titleMatch = content.title.toLowerCase().includes(filterTitle);
+                const typeMatch = !filterType || content.type === filterType;
+                return titleMatch && typeMatch;
+            });
+
+            displaySavedContent(filteredContents);
+        }
+
+        // Clear filters
+        function clearFilter() {
+            document.getElementById('filter-title').value = '';
+            document.getElementById('filter-type').value = '';
+            displaySavedContent();
+        }
+
+        // Mark content as read
+        function markAsRead(index) {
+            contentArray[index].consumed = true;
             localStorage.setItem('contents', JSON.stringify(contentArray));
             displaySavedContent();
         }
@@ -308,38 +374,10 @@
             displaySavedContent();
         }
 
-        // Filter content
-        function filterContent() {
-            const filterTitle = document.getElementById('filter-title').value.toLowerCase();
-            const filterType = document.getElementById('filter-type').value;
-            const filteredContent = contentArray.filter(content => {
-                return (filterTitle === '' || content.title.toLowerCase().includes(filterTitle)) &&
-                       (filterType === '' || content.type === filterType);
-            });
-            displaySavedContent(filteredContent);
-        }
-
-        // Clear filters
-        function clearFilter() {
-            document.getElementById('filter-title').value = '';
-            document.getElementById('filter-type').value = '';
-            displaySavedContent();
-        }
-
         // Edit content
         function editContent(index, field, value) {
             contentArray[index][field] = value;
             localStorage.setItem('contents', JSON.stringify(contentArray));
-            showNotification();
-        }
-
-        // Show notification
-        function showNotification() {
-            const notification = document.getElementById('notification');
-            notification.style.display = 'block';
-            setTimeout(() => {
-                notification.style.display = 'none';
-            }, 2000);
         }
 
         // Initial display
