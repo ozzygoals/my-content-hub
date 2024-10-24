@@ -114,13 +114,27 @@
 
         function filterContent() {
             const filterValue = document.getElementById('filter-input').value.toLowerCase();
-            displaySavedContent(savedContent.filter(content => 
+            const filteredContent = savedContent.filter(content => 
                 content.tags.some(tag => tag.toLowerCase().includes(filterValue)) || 
-                content.title.toLowerCase().includes(filterValue)
-            ));
+                content.title.toLowerCase().includes(filterValue) ||
+                content.type.toLowerCase().includes(filterValue) ||
+                content.priority.toLowerCase().includes(filterValue)
+            );
+
+            displaySavedContent(filteredContent);
         }
 
         function displaySavedContent(contents = savedContent) {
+            // Sort by priority and entry date/time
+            contents.sort((a, b) => {
+                const priorityOrder = { "High": 1, "Medium": 2, "Low": 3 };
+                const priorityComparison = priorityOrder[a.priority] - priorityOrder[b.priority];
+                if (priorityComparison === 0) {
+                    return new Date(a.date) - new Date(b.date); // Sort by entry date if priority is the same
+                }
+                return priorityComparison;
+            });
+
             displayUnconsumedContent(contents.filter(content => !content.consumed));
             displayConsumedContent(contents.filter(content => content.consumed));
         }
@@ -152,6 +166,7 @@
                 <p><strong>Priority:</strong> ${content.priority}</p>
                 <p><strong>Description:</strong> ${content.description || 'No description available.'}</p>
                 <p><strong>Content Type:</strong> ${content.type}</p>
+                <p><strong>Entry Date:</strong> ${content.date}</p>
                 <div class="button-container">
                     <button onclick="toggleConsume(${index})">${isConsumed ? 'Mark as Unconsumed' : 'Mark as Consumed'}</button>
                     <button onclick="startEdit(${index})">Edit</button>
@@ -192,36 +207,71 @@
             const url = document.getElementById('content-url').value;
             const tags = document.getElementById('content-tags').value.split(',').map(tag => tag.trim());
             const priority = document.getElementById('content-priority').value;
-            const contentType = document.getElementById('content-type').value;
+            const type = document.getElementById('content-type').value;
 
-            const contentObject = {
+            const newContent = {
                 title: title,
                 url: url,
                 tags: tags,
                 priority: priority,
-                description: '', // No description gathering from metadata
-                type: contentType,
-                consumed: false // New content is unconsumed by default
+                type: type,
+                date: new Date().toISOString(),
+                consumed: false
             };
 
-            if (currentEditIndex > -1) {
-                savedContent[currentEditIndex] = contentObject;
-                currentEditIndex = -1;
+            if (currentEditIndex === -1) {
+                savedContent.push(newContent);
             } else {
-                savedContent.push(contentObject);
+                savedContent[currentEditIndex] = { ...newContent, consumed: savedContent[currentEditIndex].consumed }; // Keep the consumed state
+                currentEditIndex = -1; // Reset edit index
             }
 
             localStorage.setItem('savedContent', JSON.stringify(savedContent));
             displaySavedContent();
-
             document.getElementById('content-form').reset();
         }
 
         function toggleConsume(index) {
-            const content = savedContent[index];
-            content.consumed = !content.consumed;
+            savedContent[index].consumed = !savedContent[index].consumed;
             localStorage.setItem('savedContent', JSON.stringify(savedContent));
             displaySavedContent();
+        }
+
+        function startEdit(index) {
+            currentEditIndex = index;
+            document.getElementById('content-title').value = savedContent[index].title;
+            document.getElementById('content-url').value = savedContent[index].url;
+            document.getElementById('content-tags').value = savedContent[index].tags.join(', ');
+            document.getElementById('content-priority').value = savedContent[index].priority;
+            document.getElementById('content-type').value = savedContent[index].type;
+            document.getElementById('edit-container-' + index).style.display = 'block';
+        }
+
+        function saveEdit(index) {
+            const title = document.getElementById('edit-content-title-' + index).value;
+            const url = document.getElementById('edit-content-url-' + index).value;
+            const tags = document.getElementById('edit-content-tags-' + index).value.split(',').map(tag => tag.trim());
+            const priority = document.getElementById('edit-content-priority-' + index).value;
+            const type = document.getElementById('edit-content-type-' + index).value;
+
+            const editedContent = {
+                title: title,
+                url: url,
+                tags: tags,
+                priority: priority,
+                type: type,
+                date: savedContent[index].date, // Keep the original date
+                consumed: savedContent[index].consumed // Keep the consumed state
+            };
+
+            savedContent[index] = editedContent;
+            localStorage.setItem('savedContent', JSON.stringify(savedContent));
+            displaySavedContent();
+        }
+
+        function cancelEdit(index) {
+            currentEditIndex = -1;
+            document.getElementById('edit-container-' + index).style.display = 'none';
         }
 
         function deleteContent(index) {
@@ -230,41 +280,8 @@
             displaySavedContent();
         }
 
-        function startEdit(index) {
-            currentEditIndex = index;
-            const contentDiv = document.getElementById(`edit-container-${index}`);
-            contentDiv.style.display = 'block'; // Show edit container
-        }
-
-        function saveEdit(index) {
-            const title = document.getElementById(`edit-content-title-${index}`).value;
-            const url = document.getElementById(`edit-content-url-${index}`).value;
-            const tags = document.getElementById(`edit-content-tags-${index}`).value.split(',').map(tag => tag.trim());
-            const priority = document.getElementById(`edit-content-priority-${index}`).value;
-            const contentType = document.getElementById(`edit-content-type-${index}`).value;
-
-            const contentObject = {
-                title: title,
-                url: url,
-                tags: tags,
-                priority: priority,
-                description: '', // Still no description gathering from metadata
-                type: contentType,
-                consumed: savedContent[index].consumed // Keep consumed status
-            };
-
-            savedContent[index] = contentObject;
-            localStorage.setItem('savedContent', JSON.stringify(savedContent));
-            displaySavedContent();
-        }
-
-        function cancelEdit(index) {
-            const contentDiv = document.getElementById(`edit-container-${index}`);
-            contentDiv.style.display = 'none'; // Hide edit container
-            currentEditIndex = -1; // Reset current edit index
-        }
-
-        displaySavedContent(); // Initial display of saved content
+        // Initial display of content
+        displaySavedContent();
     </script>
 </body>
 </html>
