@@ -3,64 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Content Hub</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>YouTube Video Metadata Saver</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        form { margin-bottom: 20px; }
+        input, button, textarea { display: block; margin: 10px 0; width: 300px; }
+        #saved-content { margin-top: 20px; }
+        .content-item { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Welcome to My Content Hub</h1>
-    </header>
-    <main>
-        <section id="content-form">
-            <h2>Save Your Content</h2>
-            <form id="save-content" onsubmit="saveContent(event)">
-                <label for="content-title">Title:</label>
-                <input type="text" id="content-title" required>
-                
-                <label for="content-url">YouTube Video URL:</label>
-                <input type="url" id="content-url" required>
-                
-                <label for="content-tags">Tags (comma-separated):</label>
-                <input type="text" id="content-tags" placeholder="e.g. education, technology">
-                
-                <label for="content-priority">Priority:</label>
-                <select id="content-priority">
-                    <option value="normal">Normal</option>
-                    <option value="important">Important</option>
-                    <option value="urgent">Urgent</option>
-                </select>
-                
-                <button type="submit">Save Content</button>
-            </form>
+    <h1>YouTube Video Metadata Saver</h1>
+    <form id="content-form">
+        <input type="text" id="content-title" placeholder="Title" required>
+        <input type="text" id="content-url" placeholder="YouTube URL" required>
+        <input type="text" id="content-tags" placeholder="Tags (comma separated)">
+        <input type="text" id="content-priority" placeholder="Priority">
+        <button type="submit">Save Content</button>
+    </form>
 
-            <input type="text" id="search-bar" placeholder="Search content..." oninput="filterContent()">
+    <div id="saved-content"></div>
 
-            <div id="content-list">
-                <h3>Your Saved Content:</h3>
-                <ul id="saved-content"></ul>
-            </div>
-            <div id="recommendations">
-                <h3>Recommended Content:</h3>
-                <div>
-                    <input type="text" id="content-input" placeholder="Enter content link or title">
-                    <button onclick="saveContent()">Save Content</button>
-                </div>
-                <ul id="recommended-content"></ul>
-            </div>
-        </section>
-        <p>This is where I will save and organize my content.</p>
-    </main>
-    <footer>
-        <p>&copy; 2024 My Content Hub</p>
-    </footer>
-    
     <script>
-        // Initialize an array to hold saved content from localStorage
         let savedContent = JSON.parse(localStorage.getItem('savedContent')) || [];
 
-        // Function to save content
+        document.getElementById('content-form').addEventListener('submit', saveContent);
+
+        function displaySavedContent() {
+            const savedContentDiv = document.getElementById('saved-content');
+            savedContentDiv.innerHTML = '';
+            savedContent.forEach(content => {
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'content-item';
+                contentDiv.innerHTML = `
+                    <h3>${content.title}</h3>
+                    <p><strong>URL:</strong> <a href="${content.url}" target="_blank">${content.url}</a></p>
+                    <p><strong>Tags:</strong> ${content.tags.join(', ')}</p>
+                    <p><strong>Priority:</strong> ${content.priority}</p>
+                    <p><strong>Description:</strong> ${content.description}</p>
+                    <img src="${content.image}" alt="Video Thumbnail">
+                `;
+                savedContentDiv.appendChild(contentDiv);
+            });
+        }
+
         async function saveContent(event) {
-            if (event) event.preventDefault(); // Prevent form submission if event is provided
+            event.preventDefault(); // Prevent form submission
 
             const title = document.getElementById('content-title').value;
             const url = document.getElementById('content-url').value;
@@ -71,13 +59,6 @@
             const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
             if (!videoId) {
                 alert('Invalid YouTube URL. Please enter a valid URL.');
-                return;
-            }
-
-            // Check if the content already exists
-            const existingContent = savedContent.find(content => content.url === url);
-            if (existingContent) {
-                alert('Content with this URL already exists.');
                 return;
             }
 
@@ -118,42 +99,8 @@
             displaySavedContent();
         }
 
-        // Function to display saved content
-        function displaySavedContent() {
-            const savedList = document.getElementById('saved-content');
-            savedList.innerHTML = ''; // Clear current list
-
-            savedContent.forEach(content => {
-                const listItem = document.createElement('li');
-                listItem.innerHTML = `
-                    <div style="display: flex; align-items: center;">
-                        <img src="${content.image}" alt="Preview" style="width:100px;height:auto;margin-right:10px;">
-                        <div>
-                            <h4>${content.title}</h4>
-                            <p>Tags: ${content.tags.join(', ')}</p>
-                            <p>Priority: ${content.priority}</p>
-                            <p>Description: ${content.description}</p>
-                        </div>
-                    </div>
-                `;
-                savedList.appendChild(listItem);
-            });
-        }
-
-        // Call this function on page load to display existing content
-        window.onload = function() {
-            displaySavedContent();
-        };
-
-        function filterContent() {
-            const searchTerm = document.getElementById('search-bar').value.toLowerCase();
-            const items = document.getElementById('saved-content').getElementsByTagName('li');
-
-            for (let item of items) {
-                const title = item.innerText.toLowerCase();
-                item.style.display = title.includes(searchTerm) ? 'list-item' : 'none';
-            }
-        }
+        // Display any saved content on page load
+        displaySavedContent();
     </script>
 </body>
 </html>
