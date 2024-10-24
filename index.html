@@ -3,34 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Content Hub</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Content Saver</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #saved-content {
+            margin-top: 20px;
+            list-style-type: none;
+            padding: 0;
+        }
+        .preview-frame {
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Welcome to My Content Hub</h1>
-    </header>
-    <main>
-        <section id="content-form">
-            <h2>Save Your Content</h2>
-            <form id="save-content">
-                <label for="content-url">URL:</label>
-                <input type="url" id="content-url" required>
-                
-                <button type="submit">Save Content</button>
-            </form>
-
-            <div id="content-list">
-                <h3>Your Saved Content:</h3>
-                <ul id="saved-content"></ul>
-            </div>
-        </section>
-        <p>This is where I will save and organize my content.</p>
-    </main>
-    <footer>
-        <p>&copy; 2024 My Content Hub</p>
-    </footer>
+    <h1>Content Saver</h1>
+    <form id="save-content">
+        <label for="content-url">Enter YouTube Video URL:</label>
+        <input type="text" id="content-url" required>
+        <button type="submit">Save Content</button>
+    </form>
     
+    <ul id="saved-content"></ul>
+
     <script>
         const apiKey = 'AIzaSyCq9q77OarbSy9FwJPr9aCmsgjc-f7dXT8';  // Your API key
         const form = document.getElementById('save-content');
@@ -40,16 +38,32 @@
             event.preventDefault();
             
             const url = document.getElementById('content-url').value;
+            const videoId = url.split('v=')[1]?.split('&')[0]; // Extract video ID
 
-            // Fetch metadata from the URL using the API
-            const response = await fetch(`https://api.example.com/getMeta?key=${apiKey}&url=${encodeURIComponent(url)}`);
+            if (!videoId) {
+                alert('Invalid URL. Please provide a YouTube video URL.');
+                return;
+            }
+
+            // Fetch metadata from the YouTube API
+            const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`);
+            
+            if (!response.ok) {
+                alert('Error fetching video details. Please check the URL.');
+                return;
+            }
+
             const data = await response.json();
+            
+            if (data.items.length === 0) {
+                alert('No video details found. Please check the video ID.');
+                return;
+            }
 
-            // Assuming the API returns title, description, image, and tags
-            const title = data.title || "Generated Title from URL"; // Fallback title
-            const description = data.description || "No description available.";
-            const imageUrl = data.image || "placeholder.jpg"; // Fallback image
-            const tags = data.tags || ["tag1", "tag2"]; // Fallback tags
+            const title = data.items[0].snippet.title;
+            const description = data.items[0].snippet.description;
+            const imageUrl = data.items[0].snippet.thumbnails.default.url;
+            const tags = data.items[0].snippet.tags || ["No tags available"]; // Fallback tags
 
             const listItem = document.createElement('li');
             listItem.innerHTML = `
