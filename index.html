@@ -183,7 +183,7 @@
             // Return some dummy metadata for the Audible book
             return {
                 description: '', // Blank for Audible
-                image: 'https://play-lh.googleusercontent.com/JG7l65_C92nOlTxhPLhHPkYjXutvkPZF1XMv1QCkCwtozsJ0FGw1tj5-lWEbaFx77A' // Generic Audible image
+                image: 'https://via.placeholder.com/150' // Placeholder image for Audible (or you can use a specific smaller image URL)
             };
         }
 
@@ -217,7 +217,7 @@
             document.getElementById('content-tags').value = content.tags.join(', ');
             document.getElementById('content-priority').value = content.priority;
 
-            // Set the current edit index to the consumed content
+            // Set the current edit index
             currentEditIndex = index;
         }
 
@@ -235,10 +235,14 @@
 
         function markAsConsumed(index) {
             const content = savedContent[index];
-            consumedContent.push(content); // Add to consumed content
-            deleteContent(index); // Remove from saved content
+            consumedContent.push(content);
+            savedContent.splice(index, 1);
+            localStorage.setItem('savedContent', JSON.stringify(savedContent));
+            localStorage.setItem('consumedContent', JSON.stringify(consumedContent));
+            displaySavedContent();
         }
 
+        // Initial display of saved content
         displaySavedContent();
     </script>
 </body>
