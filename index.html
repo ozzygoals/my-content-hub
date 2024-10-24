@@ -58,6 +58,9 @@
         .hidden {
             display: none;
         }
+        .collapsed {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -134,13 +137,16 @@
                 const contentItem = document.createElement('div');
                 contentItem.className = 'content-item';
                 contentItem.innerHTML = `
-                    <h3 class="${content.consumed ? 'consumed' : ''}"><a href="${content.url}" target="_blank">${content.title}</a></h3>
-                    <p><strong>URL:</strong> <a href="${content.url}" target="_blank">${content.url}</a></p>
-                    <p><strong>Tags:</strong> ${content.tags.join(', ')}</p>
-                    <p><strong>Priority:</strong> ${content.priority}</p>
-                    <p><strong>Type:</strong> ${content.type}</p>
-                    <p><strong>Description:</strong> ${content.description || 'No description'}</p>
-                    <button onclick="toggleConsume(${index})">${content.consumed ? 'Mark as Unread' : 'Mark as Read'}</button>
+                    <h3 class="${content.consumed ? 'consumed' : ''}">
+                        <a href="${content.url}" target="_blank">${content.title}</a>
+                    </h3>
+                    <div class="collapsed ${!content.consumed ? '' : 'hidden'}">
+                        <p><strong>Tags:</strong> ${content.tags.join(', ')}</p>
+                        <p><strong>Priority:</strong> ${content.priority}</p>
+                        <p><strong>Type:</strong> ${content.type}</p>
+                        <p><strong>Description:</strong> ${content.description || 'No description'}</p>
+                    </div>
+                    <button onclick="toggleConsume(${index})">${content.consumed ? 'Unconsumed' : 'Consumed'}</button>
                     <button onclick="startEdit(${index})">Edit</button>
                     <button onclick="deleteContent(${index})">Delete</button>
                 `;
