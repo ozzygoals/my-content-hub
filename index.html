@@ -10,6 +10,7 @@
         input, button, textarea { display: block; margin: 10px 0; width: 300px; }
         #saved-content { margin-top: 20px; }
         .content-item { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+        .button-container { margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -33,6 +34,10 @@
         function displaySavedContent() {
             const savedContentDiv = document.getElementById('saved-content');
             savedContentDiv.innerHTML = '';
+
+            // Log the saved content for debugging
+            console.log('Saved Content:', savedContent);
+
             savedContent.forEach((content, index) => {
                 const contentDiv = document.createElement('div');
                 contentDiv.className = 'content-item';
@@ -42,8 +47,10 @@
                     <p><strong>Priority:</strong> ${content.priority}</p>
                     <p><strong>Description:</strong> ${content.description}</p>
                     <img src="${content.image}" alt="Video Thumbnail">
-                    <button onclick="consumeVideo('${content.url}')">Consume</button>
-                    <button onclick="editContent(${index})">Edit</button>
+                    <div class="button-container">
+                        <button onclick="consumeVideo('${content.url}')">Consume</button>
+                        <button onclick="editContent(${index})">Edit</button>
+                    </div>
                 `;
                 savedContentDiv.appendChild(contentDiv);
             });
