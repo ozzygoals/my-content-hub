@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Content Tracker</title>
+    <title>Curatorer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -31,8 +31,8 @@
         }
         .content-item {
             border: 1px solid #ccc;
-            padding: 10px;
             margin-top: 10px;
+            overflow: hidden; /* Ensures collapsible content is hidden properly */
         }
         .consumed {
             text-decoration: line-through;
@@ -47,6 +47,14 @@
             border: 1px solid #ccc;
             margin-bottom: 10px;
             background-color: #f1f1f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .content-details {
+            display: none; /* Initially hidden */
+            padding: 10px;
+            background-color: #f9f9f9;
         }
         .content-columns {
             display: flex;
@@ -61,17 +69,13 @@
     </style>
 </head>
 <body>
-    <h1>Content Tracker</h1>
+    <h1>Curatorer</h1>
     
     <div class="collapsible" onclick="toggleForm()">Add New Content</div>
     <form id="content-form" class="hidden">
         <div class="form-group">
             <label for="content-title">Title:</label>
             <input type="text" id="content-title" required>
-        </div>
-        <div class="form-group">
-            <label for="content-url">URL:</label>
-            <input type="url" id="content-url" required>
         </div>
         <div class="form-group">
             <label for="content-tags">Tags (comma-separated):</label>
@@ -133,17 +137,31 @@
             filteredContent.forEach((content, index) => {
                 const contentItem = document.createElement('div');
                 contentItem.className = 'content-item';
-                contentItem.innerHTML = `
-                    <h3 class="${content.consumed ? 'consumed' : ''}"><a href="${content.url}" target="_blank">${content.title}</a></h3>
-                    <p><strong>URL:</strong> <a href="${content.url}" target="_blank">${content.url}</a></p>
+
+                const collapsibleTitle = document.createElement('div');
+                collapsibleTitle.className = 'collapsible';
+                collapsibleTitle.onclick = () => toggleDetails(index);
+                collapsibleTitle.innerHTML = `
+                    <h3 class="${content.consumed ? 'consumed' : ''}">${content.title}</h3>
+                    <div>
+                        <button onclick="toggleConsume(${index}); event.stopPropagation()">${content.consumed ? 'Mark as Incomplete' : 'Mark as Complete'}</button>
+                        <button onclick="startEdit(${index}); event.stopPropagation()">Edit</button>
+                        <button onclick="deleteContent(${index}); event.stopPropagation()">Delete</button>
+                    </div>
+                `;
+
+                const details = document.createElement('div');
+                details.className = 'content-details';
+                details.innerHTML = `
                     <p><strong>Tags:</strong> ${content.tags.join(', ')}</p>
                     <p><strong>Priority:</strong> ${content.priority}</p>
                     <p><strong>Type:</strong> ${content.type}</p>
                     <p><strong>Description:</strong> ${content.description || 'No description'}</p>
-                    <button onclick="toggleConsume(${index})">${content.consumed ? 'Mark as Incomplete' : 'Mark as Complete'}</button>
-                    <button onclick="startEdit(${index})">Edit</button>
-                    <button onclick="deleteContent(${index})">Delete</button>
                 `;
+
+                contentItem.appendChild(collapsibleTitle);
+                contentItem.appendChild(details);
+                
                 if (content.consumed) {
                     completeContent.appendChild(contentItem);
                 } else {
@@ -152,9 +170,13 @@
             });
         }
 
+        function toggleDetails(index) {
+            const details = document.querySelectorAll('.content-details')[index];
+            details.style.display = (details.style.display === 'block') ? 'none' : 'block';
+        }
+
         function saveContent() {
             const title = document.getElementById('content-title').value;
-            const url = document.getElementById('content-url').value;
             const tags = document.getElementById('content-tags').value.split(',').map(tag => tag.trim());
             const description = document.getElementById('content-description').value;
             const priority = document.getElementById('content-priority').value;
@@ -162,7 +184,6 @@
 
             const contentItem = {
                 title,
-                url,
                 tags,
                 description,
                 priority,
@@ -193,7 +214,6 @@
             currentEditIndex = index;
             const content = savedContent[index];
             document.getElementById('content-title').value = content.title;
-            document.getElementById('content-url').value = content.url;
             document.getElementById('content-tags').value = content.tags.join(', ');
             document.getElementById('content-description').value = content.description || '';
             document.getElementById('content-priority').value = content.priority;
