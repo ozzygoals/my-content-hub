@@ -170,19 +170,17 @@
                 }
             }
             return {}; // Return empty if no metadata is found
-        }
-
         async function fetchAudibleMetadata(url) {
-            console.log("Fetching Audible metadata for URL:", url); // Log the URL being processed
-            // Extracting the book title from the URL.
-            const audibleBookTitle = url.split('/').pop(); // Example: extract title from URL
+    // This is a simplified mock-up for testing.
+    const audibleBookTitle = url.split('/').pop(); // Example: extract title from URL
 
-            // For now, return a static response to test data population
-            return {
-                description: `Details about the Audible book titled "${audibleBookTitle}".`,
-                image: 'https://via.placeholder.com/150' // Placeholder image for Audible book
-            };
-        }
+    // Return some dummy metadata for the Audible book
+    return {
+        description: `Details about the Audible book titled "${audibleBookTitle}". This book is highly recommended for its engaging narrative and insightful themes.`,
+        image: 'https://via.placeholder.com/150?text=Audible+Book' // Placeholder image for Audible book
+    };
+}
+
 
         function consumeVideo(url) {
             window.open(url, '_blank');
