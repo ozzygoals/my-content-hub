@@ -136,6 +136,11 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
+        .form-container {
+            margin-bottom: 20px;
+        }
+
     </style>
 </head>
 <body>
@@ -146,35 +151,45 @@
             Content saved successfully!
         </div>
 
-        <div class="form-group">
-            <label for="content-title">Content Title</label>
-            <input type="text" id="content-title" placeholder="Enter title" required>
-        </div>
+        <!-- Collapsible Form -->
+        <button class="collapsible active">Add New Content</button>
+        <div class="content active form-container">
+            <div class="form-group">
+                <label for="content-title">Content Title</label>
+                <input type="text" id="content-title" placeholder="Enter title" required>
+            </div>
 
-        <div class="form-group">
-            <label for="content-description">Content Description</label>
-            <input type="text" id="content-description" placeholder="Enter description">
-        </div>
+            <div class="form-group">
+                <label for="content-description">Content Description</label>
+                <input type="text" id="content-description" placeholder="Enter description">
+            </div>
 
-        <div class="form-group">
-            <label for="content-type">Content Type</label>
-            <select id="content-type">
-                <option value="Article">Article</option>
-                <option value="Video">Video</option>
-                <option value="Podcast">Podcast</option>
-            </select>
-        </div>
+            <div class="form-group">
+                <label for="content-url">Content URL</label>
+                <input type="text" id="content-url" placeholder="Enter URL">
+            </div>
 
-        <div class="form-group">
-            <label for="content-priority">Priority</label>
-            <select id="content-priority">
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
-            </select>
-        </div>
+            <div class="form-group">
+                <label for="content-type">Content Type</label>
+                <select id="content-type">
+                    <option value="Article">Article</option>
+                    <option value="Video">Video</option>
+                    <option value="Podcast">Podcast</option>
+                    <option value="Book">Book</option>
+                </select>
+            </div>
 
-        <button class="btn" onclick="saveContent()">Save Content</button>
+            <div class="form-group">
+                <label for="content-priority">Priority</label>
+                <select id="content-priority">
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                </select>
+            </div>
+
+            <button class="btn" onclick="saveContent()">Save Content</button>
+        </div>
 
         <div class="filter-section">
             <h2>Filter Content</h2>
@@ -190,6 +205,7 @@
                     <option value="Article">Article</option>
                     <option value="Video">Video</option>
                     <option value="Podcast">Podcast</option>
+                    <option value="Book">Book</option>
                 </select>
             </div>
 
@@ -206,9 +222,11 @@
         document.getElementById('filter-title').addEventListener('input', filterContent);
         document.getElementById('filter-type').addEventListener('change', filterContent);
 
+        // Save Content
         function saveContent() {
             const title = document.getElementById('content-title').value.trim();
             const description = document.getElementById('content-description').value.trim();
+            const url = document.getElementById('content-url').value.trim();
             const type = document.getElementById('content-type').value;
             const priority = document.getElementById('content-priority').value;
 
@@ -220,6 +238,7 @@
             const content = {
                 title,
                 description,
+                url,
                 type,
                 priority,
                 consumed: false
@@ -231,31 +250,22 @@
 
             document.getElementById('content-title').value = '';
             document.getElementById('content-description').value = '';
+            document.getElementById('content-url').value = '';
             document.getElementById('content-type').value = 'Article';
             document.getElementById('content-priority').value = 'High';
 
             showNotification();
         }
 
-        function filterContent() {
-            const filterTitle = document.getElementById('filter-title').value.toLowerCase();
-            const filterType = document.getElementById('filter-type').value;
-
-            const filteredArray = contentArray.filter(content => {
-                return (
-                    content.title.toLowerCase().includes(filterTitle) &&
-                    (filterType === '' || content.type === filterType)
-                );
-            });
-
-            displaySavedContent(filteredArray);
-        }
-
+        // Display content sorted by unread first
         function displaySavedContent(contents = contentArray) {
             const contentList = document.getElementById('content-list');
             contentList.innerHTML = '';
 
-            contents.forEach((content, index) => {
+            const unread = contents.filter(content => !content.consumed);
+            const read = contents.filter(content => content.consumed);
+
+            [...unread, ...read].forEach((content, index) => {
                 const contentItem = document.createElement('div');
                 contentItem.classList.add('content-item');
 
@@ -263,42 +273,67 @@
                     <h3>${content.title}</h3>
                     <button class="collapsible">Show Details</button>
                     <div class="content">
-                        <p>Description: ${content.description}</p>
-                        <p>Type: ${content.type}</p>
-                        <p>Priority: ${content.priority}</p>
+                        <p><strong>Description:</strong> <input type="text" value="${content.description}" onchange="editContent(${index}, 'description', this.value)"></p>
+                        <p><strong>Type:</strong> ${content.type}</p>
+                        <p><strong>URL:</strong> <input type="text" value="${content.url}" onchange="editContent(${index}, 'url', this.value)"></p>
+                        <p><strong>Priority:</strong> ${content.priority}</p>
                         <button class="btn" onclick="toggleConsume(${index})">${content.consumed ? 'Mark as Unread' : 'Mark as Read'}</button>
                         <button class="btn btn-delete" onclick="deleteContent(${index})">Delete</button>
                     </div>
                 `;
-                contentList.appendChild(contentItem);
 
-                const collapsible = contentItem.querySelector('.collapsible');
-                const contentDiv = contentItem.querySelector('.content');
-                collapsible.addEventListener('click', function() {
-                    collapsible.classList.toggle('active');
-                    contentDiv.classList.toggle('active');
+                const collapsibleBtn = contentItem.querySelector('.collapsible');
+                const collapsibleContent = contentItem.querySelector('.content');
+
+                collapsibleBtn.addEventListener('click', () => {
+                    collapsibleContent.classList.toggle('active');
+                    collapsibleBtn.classList.toggle('active');
                 });
+
+                contentList.appendChild(contentItem);
             });
         }
 
+        // Toggle consumed state
         function toggleConsume(index) {
             contentArray[index].consumed = !contentArray[index].consumed;
             localStorage.setItem('contents', JSON.stringify(contentArray));
             displaySavedContent();
         }
 
+        // Delete content
         function deleteContent(index) {
             contentArray.splice(index, 1);
             localStorage.setItem('contents', JSON.stringify(contentArray));
             displaySavedContent();
         }
 
+        // Filter content
+        function filterContent() {
+            const filterTitle = document.getElementById('filter-title').value.toLowerCase();
+            const filterType = document.getElementById('filter-type').value;
+            const filteredContent = contentArray.filter(content => {
+                return (filterTitle === '' || content.title.toLowerCase().includes(filterTitle)) &&
+                       (filterType === '' || content.type === filterType);
+            });
+            displaySavedContent(filteredContent);
+        }
+
+        // Clear filters
         function clearFilter() {
             document.getElementById('filter-title').value = '';
             document.getElementById('filter-type').value = '';
             displaySavedContent();
         }
 
+        // Edit content
+        function editContent(index, field, value) {
+            contentArray[index][field] = value;
+            localStorage.setItem('contents', JSON.stringify(contentArray));
+            showNotification();
+        }
+
+        // Show notification
         function showNotification() {
             const notification = document.getElementById('notification');
             notification.style.display = 'block';
@@ -307,7 +342,7 @@
             }, 2000);
         }
 
-        // Initial content display
+        // Initial display
         displaySavedContent();
     </script>
 </body>
