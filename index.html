@@ -56,22 +56,34 @@
     </footer>
     
     <script>
-        // Initialize an array to hold saved content
+        // Initialize an array to hold saved content from localStorage
         let savedContent = JSON.parse(localStorage.getItem('savedContent')) || [];
 
         // Function to save content
         function saveContent() {
-            const contentInput = document.getElementById('content-input');
-            const contentValue = contentInput.value.trim();
+            const title = document.getElementById('content-title').value;
+            const url = document.getElementById('content-url').value;
+            const tags = document.getElementById('content-tags').value.split(',').map(tag => tag.trim());
+            const priority = document.getElementById('content-priority').value;
 
-            if (contentValue) {
-                savedContent.push(contentValue); // Add to the savedContent array
-                localStorage.setItem('savedContent', JSON.stringify(savedContent)); // Save to localStorage
-                contentInput.value = ''; // Clear the input field
-                displaySavedContent(); // Update displayed content
-            } else {
-                alert('Please enter a valid content link or title.');
-            }
+            // Create a content object
+            const content = {
+                title: title,
+                url: url,
+                tags: tags,
+                priority: priority,
+                description: 'Generated description based on content.', // Placeholder for actual AI-generated description
+                image: 'https://img.youtube.com/vi/' + url.split('v=')[1] + '/0.jpg' // Extract image from YouTube URL
+            };
+
+            // Add to the savedContent array
+            savedContent.push(content);
+
+            // Save to localStorage
+            localStorage.setItem('savedContent', JSON.stringify(savedContent));
+
+            // Display saved content
+            displaySavedContent();
         }
 
         // Function to display saved content
@@ -79,84 +91,37 @@
             const savedList = document.getElementById('saved-content');
             savedList.innerHTML = ''; // Clear current list
 
-            savedContent.forEach((content) => {
+            savedContent.forEach(content => {
                 const listItem = document.createElement('li');
-                listItem.textContent = content;
+                listItem.innerHTML = `
+                    <div style="display: flex; align-items: center;">
+                        <img src="${content.image}" alt="Preview" style="width:100px;height:auto;margin-right:10px;">
+                        <div>
+                            <h4>${content.title}</h4>
+                            <p>Tags: ${content.tags.join(', ')}</p>
+                            <p>Priority: ${content.priority}</p>
+                            <p>Description: ${content.description}</p>
+                        </div>
+                    </div>
+                `;
                 savedList.appendChild(listItem);
             });
         }
 
-        const form = document.getElementById('save-content');
-        const contentList = document.getElementById('saved-content');
-        const recommendationsList = document.getElementById('recommended-content');
-
-        form.addEventListener('submit', function(event) {
-            event.preventDefault();
-            
-            const title = document.getElementById('content-title').value;
-            const url = document.getElementById('content-url').value;
-            const tags = document.getElementById('content-tags').value.split(',').map(tag => tag.trim());
-            const priority = document.getElementById('content-priority').value;
-
-            const listItem = document.createElement('li');
-            listItem.innerHTML = `
-                <a href="${url}" target="_blank">${title}</a> (Tags: ${tags.join(', ')}) - <strong>${priority}</strong>
-                <button onclick="downloadContent('${url}', '${title}')">Download</button>
-            `;
-            contentList.appendChild(listItem);
-
-            // Update recommendations
-            updateRecommendations(tags, title);
-
-            // Clear the form
-            form.reset();
-
-            // Save to local storage
-            savedContent.push({ title, url, tags, priority });
-            localStorage.setItem('savedContent', JSON.stringify(savedContent));
-        });
-
-        function downloadContent(url, title) {
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = title || 'download';  // Fallback title
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+        // Call this function on page load to display existing content
+        window.onload = function() {
+            displaySavedContent();
+        };
 
         function filterContent() {
             const searchTerm = document.getElementById('search-bar').value.toLowerCase();
-            const items = contentList.getElementsByTagName('li');
+            const items = document.getElementById('saved-content').getElementsByTagName('li');
 
             for (let item of items) {
                 const title = item.innerText.toLowerCase();
                 item.style.display = title.includes(searchTerm) ? 'list-item' : 'none';
             }
         }
-
-        function updateRecommendations(tags, currentTitle) {
-            recommendationsList.innerHTML = ''; // Clear existing recommendations
-
-            const items = contentList.getElementsByTagName('li');
-
-            for (let item of items) {
-                const title = item.innerText.toLowerCase();
-                const itemTags = item.innerHTML.match(/Tags: (.*?)(?=\))/)[1].toLowerCase().split(', ');
-
-                // Check if tags match and it's not the current item
-                if (itemTags.some(tag => tags.includes(tag)) && !title.includes(currentTitle.toLowerCase())) {
-                    const recommendationItem = document.createElement('li');
-                    recommendationItem.innerHTML = `
-                        <a href="${item.querySelector('a').href}" target="_blank">${item.querySelector('a').innerText}</a> (Tags: ${itemTags.join(', ')})
-                    `;
-                    recommendationsList.appendChild(recommendationItem);
-                }
-            }
-        }
-
-        // Display saved content on page load
-        displaySavedContent();
     </script>
 </body>
 </html>
