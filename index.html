@@ -26,22 +26,24 @@
 
     <script>
         let savedContent = JSON.parse(localStorage.getItem('savedContent')) || [];
+        let currentEditIndex = -1;
 
         document.getElementById('content-form').addEventListener('submit', saveContent);
 
         function displaySavedContent() {
             const savedContentDiv = document.getElementById('saved-content');
             savedContentDiv.innerHTML = '';
-            savedContent.forEach(content => {
+            savedContent.forEach((content, index) => {
                 const contentDiv = document.createElement('div');
                 contentDiv.className = 'content-item';
                 contentDiv.innerHTML = `
                     <h3>${content.title}</h3>
-                    <p><strong>URL:</strong> <a href="${content.url}" target="_blank">${content.url}</a></p>
                     <p><strong>Tags:</strong> ${content.tags.join(', ')}</p>
                     <p><strong>Priority:</strong> ${content.priority}</p>
                     <p><strong>Description:</strong> ${content.description}</p>
                     <img src="${content.image}" alt="Video Thumbnail">
+                    <button onclick="consumeVideo('${content.url}')">Consume</button>
+                    <button onclick="editContent(${index})">Edit</button>
                 `;
                 savedContentDiv.appendChild(contentDiv);
             });
@@ -89,14 +91,36 @@
                 image: image
             };
 
-            // Add to the savedContent array
-            savedContent.push(content);
+            if (currentEditIndex > -1) {
+                // Edit existing content
+                savedContent[currentEditIndex] = content;
+                currentEditIndex = -1;
+            } else {
+                // Add new content
+                savedContent.push(content);
+            }
 
             // Save to localStorage
             localStorage.setItem('savedContent', JSON.stringify(savedContent));
 
             // Display saved content
             displaySavedContent();
+
+            // Clear form fields
+            document.getElementById('content-form').reset();
+        }
+
+        function consumeVideo(url) {
+            window.open(url, '_blank');
+        }
+
+        function editContent(index) {
+            const content = savedContent[index];
+            document.getElementById('content-title').value = content.title;
+            document.getElementById('content-url').value = content.url;
+            document.getElementById('content-tags').value = content.tags.join(', ');
+            document.getElementById('content-priority').value = content.priority;
+            currentEditIndex = index;
         }
 
         // Display any saved content on page load
