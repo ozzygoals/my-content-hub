@@ -75,6 +75,9 @@
         <label for="content-tags">Tags:</label>
         <input type="text" id="content-tags" placeholder="Separate tags with commas">
 
+        <label for="content-description">Description:</label>
+        <textarea id="content-description" placeholder="Add a description of the content"></textarea>
+
         <label for="content-priority">Priority Level:</label>
         <select id="content-priority">
             <option value="Low">Low</option>
@@ -180,6 +183,8 @@
                     <input type="url" id="edit-content-url-${index}" value="${content.url}">
                     <label for="edit-content-tags-${index}">Tags:</label>
                     <input type="text" id="edit-content-tags-${index}" value="${content.tags.join(', ')}">
+                    <label for="edit-content-description-${index}">Description:</label>
+                    <textarea id="edit-content-description-${index}">${content.description || ''}</textarea>
                     <label for="edit-content-priority-${index}">Priority Level:</label>
                     <select id="edit-content-priority-${index}">
                         <option value="Low" ${content.priority === "Low" ? 'selected' : ''}>Low</option>
@@ -206,24 +211,26 @@
             const title = document.getElementById('content-title').value;
             const url = document.getElementById('content-url').value;
             const tags = document.getElementById('content-tags').value.split(',').map(tag => tag.trim());
+            const description = document.getElementById('content-description').value;
             const priority = document.getElementById('content-priority').value;
             const type = document.getElementById('content-type').value;
 
-            const newContent = {
-                title: title,
-                url: url,
-                tags: tags,
-                priority: priority,
-                type: type,
+            const contentItem = {
+                title,
+                url,
+                tags,
+                description,
+                priority,
+                type,
                 date: new Date().toISOString(),
                 consumed: false
             };
 
             if (currentEditIndex === -1) {
-                savedContent.push(newContent);
+                savedContent.push(contentItem);
             } else {
-                savedContent[currentEditIndex] = { ...newContent, consumed: savedContent[currentEditIndex].consumed }; // Keep the consumed state
-                currentEditIndex = -1; // Reset edit index
+                savedContent[currentEditIndex] = contentItem;
+                currentEditIndex = -1;
             }
 
             localStorage.setItem('savedContent', JSON.stringify(savedContent));
@@ -239,39 +246,31 @@
 
         function startEdit(index) {
             currentEditIndex = index;
-            document.getElementById('content-title').value = savedContent[index].title;
-            document.getElementById('content-url').value = savedContent[index].url;
-            document.getElementById('content-tags').value = savedContent[index].tags.join(', ');
-            document.getElementById('content-priority').value = savedContent[index].priority;
-            document.getElementById('content-type').value = savedContent[index].type;
-            document.getElementById('edit-container-' + index).style.display = 'block';
+            const content = savedContent[index];
+            document.getElementById('content-title').value = content.title;
+            document.getElementById('content-url').value = content.url;
+            document.getElementById('content-tags').value = content.tags.join(', ');
+            document.getElementById('content-description').value = content.description || '';
+            document.getElementById('content-priority').value = content.priority;
+            document.getElementById('content-type').value = content.type;
         }
 
         function saveEdit(index) {
-            const title = document.getElementById('edit-content-title-' + index).value;
-            const url = document.getElementById('edit-content-url-' + index).value;
-            const tags = document.getElementById('edit-content-tags-' + index).value.split(',').map(tag => tag.trim());
-            const priority = document.getElementById('edit-content-priority-' + index).value;
-            const type = document.getElementById('edit-content-type-' + index).value;
+            const title = document.getElementById(`edit-content-title-${index}`).value;
+            const url = document.getElementById(`edit-content-url-${index}`).value;
+            const tags = document.getElementById(`edit-content-tags-${index}`).value.split(',').map(tag => tag.trim());
+            const description = document.getElementById(`edit-content-description-${index}`).value;
+            const priority = document.getElementById(`edit-content-priority-${index}`).value;
+            const type = document.getElementById(`edit-content-type-${index}`).value;
 
-            const editedContent = {
-                title: title,
-                url: url,
-                tags: tags,
-                priority: priority,
-                type: type,
-                date: savedContent[index].date, // Keep the original date
-                consumed: savedContent[index].consumed // Keep the consumed state
-            };
-
-            savedContent[index] = editedContent;
+            savedContent[index] = { ...savedContent[index], title, url, tags, description, priority, type };
             localStorage.setItem('savedContent', JSON.stringify(savedContent));
             displaySavedContent();
         }
 
         function cancelEdit(index) {
             currentEditIndex = -1;
-            document.getElementById('edit-container-' + index).style.display = 'none';
+            displaySavedContent();
         }
 
         function deleteContent(index) {
@@ -280,7 +279,7 @@
             displaySavedContent();
         }
 
-        // Initial display of content
+        // Initial display
         displaySavedContent();
     </script>
 </body>
