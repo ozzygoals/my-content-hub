@@ -173,10 +173,11 @@
         }
 
         async function fetchAudibleMetadata(url) {
-            // Implement your logic to fetch Audible book details.
-            // This is a placeholder implementation:
-            // In a real scenario, you would replace this with your API call or web scraping logic.
+            console.log("Fetching Audible metadata for URL:", url); // Log the URL being processed
+            // Extracting the book title from the URL.
             const audibleBookTitle = url.split('/').pop(); // Example: extract title from URL
+
+            // For now, return a static response to test data population
             return {
                 description: `Details about the Audible book titled "${audibleBookTitle}".`,
                 image: 'https://via.placeholder.com/150' // Placeholder image for Audible book
@@ -225,15 +226,17 @@
 
         function markAsConsumed(index) {
             const content = savedContent[index];
-            consumedContent.push(content); // Add content to consumed
-            savedContent.splice(index, 1); // Remove from saved
+            consumedContent.push(content);
+            savedContent.splice(index, 1);
             localStorage.setItem('savedContent', JSON.stringify(savedContent));
             localStorage.setItem('consumedContent', JSON.stringify(consumedContent));
-            displaySavedContent(); // Refresh saved content
-            displayConsumedContent(); // Refresh consumed content
+            displaySavedContent(); // Refresh the displayed content
+            displayConsumedContent(); // Refresh the consumed content
         }
 
+        // Initial display
         displaySavedContent();
+        displayConsumedContent();
     </script>
 </body>
 </html>
