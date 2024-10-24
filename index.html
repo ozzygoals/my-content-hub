@@ -33,11 +33,20 @@
                 <button type="submit">Save Content</button>
             </form>
 
+            <!-- Add the search bar here -->
             <input type="text" id="search-bar" placeholder="Search content..." oninput="filterContent()">
 
             <div id="content-list">
                 <h3>Your Saved Content:</h3>
                 <ul id="saved-content"></ul>
+            </div>
+            <div id="recommendations">
+                <h3>Recommended Content:</h3>
+                <div>
+                    <input type="text" id="content-input" placeholder="Enter content link or title">
+                    <button onclick="saveContent()">Save Content</button>
+                </div>
+                <ul id="recommended-content"></ul>
             </div>
         </section>
         <p>This is where I will save and organize my content.</p>
@@ -47,60 +56,52 @@
     </footer>
     
     <script>
+        // Initialize an array to hold saved content
         let savedContent = JSON.parse(localStorage.getItem('savedContent')) || [];
-        
+
         const form = document.getElementById('save-content');
         const contentList = document.getElementById('saved-content');
+        const recommendationsList = document.getElementById('recommended-content');
 
         form.addEventListener('submit', function(event) {
             event.preventDefault();
-
+            
+            const title = document.getElementById('content-title').value;
             const url = document.getElementById('content-url').value;
             const tags = document.getElementById('content-tags').value.split(',').map(tag => tag.trim());
             const priority = document.getElementById('content-priority').value;
 
             // Extracting video ID from URL for YouTube
-            const videoId = url.split('v=')[1]?.split('&')[0]; // Safely extract the video ID
-            if (!videoId) {
-                alert('Invalid YouTube URL');
-                return;
-            }
+            const videoId = url.split('v=')[1];
+            const image = 'https://img.youtube.com/vi/' + videoId + '/0.jpg'; // Get thumbnail from YouTube
+            const description = `This content titled "${title}" is tagged with ${tags.join(', ')}. It has a priority level of "${priority}".`; // Generate description
 
-            // Fetch video details using the YouTube API
-            fetch(`https://www.googleapis.com/youtube/v3/videos?id=${videoId}&key=YOUR_YOUTUBE_API_KEY&part=snippet`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.items.length > 0) {
-                        const video = data.items[0];
-                        const title = video.snippet.title;
-                        const image = video.snippet.thumbnails.high.url;
-                        const description = video.snippet.description;
+            // Create a content object
+            const content = {
+                title: title,
+                url: url,
+                tags: tags,
+                priority: priority,
+                description: description, // Use generated description
+                image: image // Store the image URL
+            };
 
-                        const content = {
-                            title: title,
-                            url: url,
-                            tags: tags,
-                            priority: priority,
-                            description: description,
-                            image: image
-                        };
+            // Add to the savedContent array
+            savedContent.push(content);
 
-                        savedContent.push(content);
-                        localStorage.setItem('savedContent', JSON.stringify(savedContent));
-                        displaySavedContent();
-                        form.reset();
-                    } else {
-                        alert('Video not found');
-                    }
-                })
-                .catch(err => {
-                    console.error('Error fetching video details:', err);
-                    alert('Error fetching video details. Please check the URL.');
-                });
+            // Save to localStorage
+            localStorage.setItem('savedContent', JSON.stringify(savedContent));
+
+            // Display saved content
+            displaySavedContent();
+
+            // Clear the form
+            form.reset();
         });
 
         function displaySavedContent() {
-            contentList.innerHTML = ''; // Clear current list
+            const savedList = document.getElementById('saved-content');
+            savedList.innerHTML = ''; // Clear current list
 
             savedContent.forEach(content => {
                 const listItem = document.createElement('li');
@@ -115,7 +116,7 @@
                         </div>
                     </div>
                 `;
-                contentList.appendChild(listItem);
+                savedList.appendChild(listItem);
             });
         }
 
@@ -126,6 +127,26 @@
             for (let item of items) {
                 const title = item.innerText.toLowerCase();
                 item.style.display = title.includes(searchTerm) ? 'list-item' : 'none';
+            }
+        }
+
+        function updateRecommendations(tags, currentTitle) {
+            recommendationsList.innerHTML = ''; // Clear existing recommendations
+
+            const items = contentList.getElementsByTagName('li');
+
+            for (let item of items) {
+                const title = item.innerText.toLowerCase();
+                const itemTags = item.innerHTML.match(/Tags: (.*?)(?=\))/)[1].toLowerCase().split(', ');
+
+                // Check if tags match and it's not the current item
+                if (itemTags.some(tag => tags.includes(tag)) && !title.includes(currentTitle.toLowerCase())) {
+                    const recommendationItem = document.createElement('li');
+                    recommendationItem.innerHTML = `
+                        <a href="${item.querySelector('a').href}" target="_blank">${item.querySelector('a').innerText}</a> (Tags: ${itemTags.join(', ')})
+                    `;
+                    recommendationsList.appendChild(recommendationItem);
+                }
             }
         }
     </script>
