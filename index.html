@@ -41,10 +41,11 @@
 
         function filterContent() {
             const filterValue = document.getElementById('filter-input').value.toLowerCase();
-            displaySavedContent(savedContent.filter(content => 
+            const filteredContent = savedContent.filter(content => 
                 content.tags.some(tag => tag.toLowerCase().includes(filterValue)) || 
                 content.title.toLowerCase().includes(filterValue)
-            ));
+            );
+            displaySavedContent(filteredContent);
         }
 
         function displaySavedContent(contents = savedContent) {
@@ -57,8 +58,8 @@
                     <h3>${content.title}</h3>
                     <p><strong>Tags:</strong> ${content.tags.join(', ')}</p>
                     <p><strong>Priority:</strong> ${content.priority}</p>
-                    <p><strong>Description:</strong> ${content.description}</p>
-                    <img src="${content.image}" alt="Content Thumbnail">
+                    <p><strong>Description:</strong> ${content.description || 'No description available.'}</p>
+                    <img src="${content.image || 'https://via.placeholder.com/150'}" alt="Content Thumbnail">
                     <div class="button-container">
                         <button onclick="consumeVideo('${content.url}')">Consume</button>
                         <button onclick="editContent(${index})">Edit</button>
@@ -83,8 +84,8 @@
                     <h3>${content.title}</h3>
                     <p><strong>Tags:</strong> ${content.tags.join(', ')}</p>
                     <p><strong>Priority:</strong> ${content.priority}</p>
-                    <p><strong>Description:</strong> ${content.description}</p>
-                    <img src="${content.image}" alt="Content Thumbnail">
+                    <p><strong>Description:</strong> ${content.description || 'No description available.'}</p>
+                    <img src="${content.image || 'https://via.placeholder.com/150'}" alt="Content Thumbnail">
                     <div class="button-container">
                         <button onclick="consumeVideo('${content.url}')">Consume</button>
                         <button onclick="editConsumedContent(${index})">Edit</button>
@@ -193,8 +194,6 @@
             document.getElementById('content-url').value = content.url;
             document.getElementById('content-tags').value = content.tags.join(', ');
             document.getElementById('content-priority').value = content.priority;
-
-            // Set the current edit index
             currentEditIndex = index;
         }
 
@@ -204,9 +203,16 @@
             document.getElementById('content-url').value = content.url;
             document.getElementById('content-tags').value = content.tags.join(', ');
             document.getElementById('content-priority').value = content.priority;
+            currentEditIndex = -1; // Reset to prevent confusion
+        }
 
-            // Set the current edit index
-            currentEditIndex = index;
+        function markAsConsumed(index) {
+            const content = savedContent[index];
+            consumedContent.push(content);
+            savedContent.splice(index, 1);
+            localStorage.setItem('savedContent', JSON.stringify(savedContent));
+            localStorage.setItem('consumedContent', JSON.stringify(consumedContent));
+            displaySavedContent();
         }
 
         function deleteContent(index) {
@@ -219,13 +225,6 @@
             consumedContent.splice(index, 1);
             localStorage.setItem('consumedContent', JSON.stringify(consumedContent));
             displayConsumedContent();
-        }
-
-        function markAsConsumed(index) {
-            const content = savedContent[index];
-            consumedContent.push(content);
-            localStorage.setItem('consumedContent', JSON.stringify(consumedContent));
-            deleteContent(index); // Optionally delete from saved content
         }
 
         // Initial display of saved content
