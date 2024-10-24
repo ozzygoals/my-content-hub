@@ -17,7 +17,7 @@
                 <label for="content-title">Title:</label>
                 <input type="text" id="content-title" required>
                 
-                <label for="content-url">URL:</label>
+                <label for="content-url">YouTube Video URL:</label>
                 <input type="url" id="content-url" required>
                 
                 <label for="content-tags">Tags (comma-separated):</label>
@@ -33,7 +33,6 @@
                 <button type="submit">Save Content</button>
             </form>
 
-            <!-- Add the search bar here -->
             <input type="text" id="search-bar" placeholder="Search content..." oninput="filterContent()">
 
             <div id="content-list">
@@ -56,15 +55,40 @@
     </footer>
     
     <script>
+        const apiKey = 'AIzaSyCq9q77OarbSy9FwJPr9aCmsgjc-f7dXT8'; // Your API key
+
         // Initialize an array to hold saved content from localStorage
         let savedContent = JSON.parse(localStorage.getItem('savedContent')) || [];
 
         // Function to save content
-        function saveContent() {
+        async function saveContent() {
             const title = document.getElementById('content-title').value;
             const url = document.getElementById('content-url').value;
             const tags = document.getElementById('content-tags').value.split(',').map(tag => tag.trim());
             const priority = document.getElementById('content-priority').value;
+
+            // Extract video ID from the URL
+            const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
+            if (!videoId) {
+                alert('Invalid YouTube URL. Please enter a valid URL.');
+                return;
+            }
+
+            // Fetch metadata from the YouTube API
+            const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`);
+            if (!response.ok) {
+                alert('Error fetching video details. Please check the URL.');
+                return;
+            }
+
+            const data = await response.json();
+            if (data.items.length === 0) {
+                alert('No video details found. Please check the video ID.');
+                return;
+            }
+
+            const description = data.items[0].snippet.description;
+            const image = data.items[0].snippet.thumbnails.default.url;
 
             // Create a content object
             const content = {
@@ -72,8 +96,8 @@
                 url: url,
                 tags: tags,
                 priority: priority,
-                description: 'Generated description based on content.', // Placeholder for actual AI-generated description
-                image: 'https://img.youtube.com/vi/' + url.split('v=')[1] + '/0.jpg' // Extract image from YouTube URL
+                description: description,
+                image: image
             };
 
             // Add to the savedContent array
