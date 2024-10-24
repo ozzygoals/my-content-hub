@@ -156,7 +156,6 @@
             padding: 5px 0;
             font-weight: bold;
         }
-
     </style>
 </head>
 <body>
@@ -286,7 +285,7 @@
                     <div class="column">
                         ${items.map((content, index) => `
                             <div class="content-item">
-                                <h3>${content.title}</h3>
+                                <h3><a href="${content.url}" target="_blank">${content.title}</a></h3>
                                 <button class="collapsible">Show Details</button>
                                 <div class="content">
                                     <div class="header-row">
@@ -294,9 +293,8 @@
                                         <span><strong>Priority:</strong> ${content.priority}</span>
                                     </div>
                                     <p><strong>Description:</strong> <input type="text" value="${content.description}" onchange="editContent(${index}, 'description', this.value)"></p>
-                                    <p><strong>URL:</strong> <input type="text" value="${content.url}" onchange="editContent(${index}, 'url', this.value)"></p>
-                                    <button onclick="markAsRead(${index})">Mark as Read</button>
-                                    <button class="btn-delete" onclick="deleteContent(${index})">Delete</button>
+                                    <p><strong>Consumed:</strong> <input type="checkbox" onchange="editContent(${index}, 'consumed', this.checked)" ${content.consumed ? 'checked' : ''}> Mark as Read</p>
+                                    <button onclick="deleteContent(${index})" class="btn btn-delete">Delete</button>
                                 </div>
                             </div>
                         `).join('')}
@@ -306,20 +304,19 @@
 
             contentList.innerHTML = `
                 <div class="column">
-                    <h3>Unread</h3>
+                    <h2>Unread Content</h2>
                     ${createColumn(unread)}
                 </div>
                 <div class="column">
-                    <h3>Read</h3>
+                    <h2>Read Content</h2>
                     ${createColumn(read)}
                 </div>
             `;
 
-            // Attach collapsible functionality
-            const collapsibles = document.getElementsByClassName("collapsible");
-            for (let i = 0; i < collapsibles.length; i++) {
-                collapsibles[i].addEventListener("click", function() {
-                    this.classList.toggle("active");
+            // Add event listeners for collapsible buttons
+            document.querySelectorAll('.collapsible').forEach(button => {
+                button.addEventListener('click', function() {
+                    this.classList.toggle('active');
                     const content = this.nextElementSibling;
                     if (content.style.display === "block") {
                         content.style.display = "none";
@@ -327,60 +324,58 @@
                         content.style.display = "block";
                     }
                 });
-            }
-        }
-
-        // Show notification
-        function showNotification() {
-            const notification = document.getElementById('notification');
-            notification.style.display = 'block';
-            setTimeout(() => {
-                notification.style.display = 'none';
-            }, 3000);
-        }
-
-        // Filter content
-        function filterContent() {
-            const filterTitle = document.getElementById('filter-title').value.toLowerCase();
-            const filterType = document.getElementById('filter-type').value;
-
-            const filteredContents = contentArray.filter(content => {
-                const titleMatch = content.title.toLowerCase().includes(filterTitle);
-                const typeMatch = !filterType || content.type === filterType;
-                return titleMatch && typeMatch;
             });
-
-            displaySavedContent(filteredContents);
         }
 
-        // Clear filters
-        function clearFilter() {
-            document.getElementById('filter-title').value = '';
-            document.getElementById('filter-type').value = '';
-            displaySavedContent();
-        }
-
-        // Mark content as read
-        function markAsRead(index) {
-            contentArray[index].consumed = true;
+        // Edit Content
+        function editContent(index, field, value) {
+            if (field === 'consumed') {
+                contentArray[index].consumed = value;
+            } else {
+                contentArray[index][field] = value;
+            }
             localStorage.setItem('contents', JSON.stringify(contentArray));
             displaySavedContent();
         }
 
-        // Delete content
+        // Delete Content
         function deleteContent(index) {
             contentArray.splice(index, 1);
             localStorage.setItem('contents', JSON.stringify(contentArray));
             displaySavedContent();
         }
 
-        // Edit content
-        function editContent(index, field, value) {
-            contentArray[index][field] = value;
-            localStorage.setItem('contents', JSON.stringify(contentArray));
+        // Filter Content
+        function filterContent() {
+            const filterTitle = document.getElementById('filter-title').value.toLowerCase();
+            const filterType = document.getElementById('filter-type').value;
+
+            const filteredContent = contentArray.filter(content => {
+                const matchesTitle = content.title.toLowerCase().includes(filterTitle);
+                const matchesType = filterType ? content.type === filterType : true;
+                return matchesTitle && matchesType;
+            });
+
+            displaySavedContent(filteredContent);
         }
 
-        // Initial display
+        // Clear Filter
+        function clearFilter() {
+            document.getElementById('filter-title').value = '';
+            document.getElementById('filter-type').value = '';
+            displaySavedContent();
+        }
+
+        // Show Notification
+        function showNotification() {
+            const notification = document.getElementById('notification');
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 2000);
+        }
+
+        // Initial Display
         displaySavedContent();
     </script>
 </body>
