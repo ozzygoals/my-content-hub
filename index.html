@@ -38,10 +38,14 @@
 
             <div id="content-list">
                 <h3>Your Saved Content:</h3>
-                <ul id="saved-content"></ul>
+                <ul id="saved-list"></ul> <!-- Changed from saved-content to saved-list -->
             </div>
             <div id="recommendations">
                 <h3>Recommended Content:</h3>
+                <div>
+                    <input type="text" id="content-input" placeholder="Enter content link or title">
+                    <button onclick="saveContent()">Save Content</button>
+                </div>
                 <ul id="recommended-content"></ul>
             </div>
         </section>
@@ -53,7 +57,7 @@
     
     <script>
         const form = document.getElementById('save-content');
-        const contentList = document.getElementById('saved-content');
+        const contentList = document.getElementById('saved-list'); // Updated to match the new ID
         const recommendationsList = document.getElementById('recommended-content');
 
         form.addEventListener('submit', function(event) {
@@ -117,5 +121,37 @@
             }
         }
     </script>
+    
+    <script>
+        // Initialize an array to hold saved content
+        let savedContent = [];
+
+        // Function to save content
+        function saveContent() {
+            const contentInput = document.getElementById('content-input');
+            const contentValue = contentInput.value.trim();
+
+            if (contentValue) {
+                savedContent.push(contentValue); // Add to the savedContent array
+                contentInput.value = ''; // Clear the input field
+                displaySavedContent(); // Update displayed content
+            } else {
+                alert('Please enter a valid content link or title.');
+            }
+        }
+
+        // Function to display saved content
+        function displaySavedContent() {
+            const savedList = document.getElementById('saved-list');
+            savedList.innerHTML = ''; // Clear current list
+
+            savedContent.forEach((content, index) => {
+                const listItem = document.createElement('li');
+                listItem.textContent = content;
+                savedList.appendChild(listItem);
+            });
+        }
+    </script>
+
 </body>
 </html>
