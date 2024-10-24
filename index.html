@@ -8,7 +8,7 @@
         body { font-family: Arial, sans-serif; }
         form { margin-bottom: 20px; }
         input, button, textarea { display: block; margin: 10px 0; width: 300px; }
-        #saved-content { margin-top: 20px; }
+        #saved-content, #consumed-content { margin-top: 20px; }
         .content-item { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
         .button-container { margin-top: 10px; }
     </style>
@@ -24,9 +24,12 @@
     </form>
 
     <div id="saved-content"></div>
+    <h2>Consumed Content</h2>
+    <div id="consumed-content"></div>
 
     <script>
         let savedContent = JSON.parse(localStorage.getItem('savedContent')) || [];
+        let consumedContent = JSON.parse(localStorage.getItem('consumedContent')) || [];
         let currentEditIndex = -1;
 
         document.getElementById('content-form').addEventListener('submit', saveContent);
@@ -34,10 +37,6 @@
         function displaySavedContent() {
             const savedContentDiv = document.getElementById('saved-content');
             savedContentDiv.innerHTML = '';
-
-            // Log the saved content for debugging
-            console.log('Saved Content:', savedContent);
-
             savedContent.forEach((content, index) => {
                 const contentDiv = document.createElement('div');
                 contentDiv.className = 'content-item';
@@ -50,9 +49,32 @@
                     <div class="button-container">
                         <button onclick="consumeVideo('${content.url}')">Consume</button>
                         <button onclick="editContent(${index})">Edit</button>
+                        <button onclick="deleteContent(${index})">Delete Entry</button>
+                        <button onclick="markAsConsumed(${index})">Mark as Consumed</button>
                     </div>
                 `;
                 savedContentDiv.appendChild(contentDiv);
+            });
+
+            // Display consumed content
+            displayConsumedContent();
+        }
+
+        function displayConsumedContent() {
+            const consumedContentDiv = document.getElementById('consumed-content');
+            consumedContentDiv.innerHTML = '';
+            consumedContent.forEach(content => {
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'content-item';
+                contentDiv.innerHTML = `
+                    <h3>${content.title}</h3>
+                    <p><strong>Tags:</strong> ${content.tags.join(', ')}</p>
+                    <p><strong>Priority:</strong> ${content.priority}</p>
+                    <p><strong>Description:</strong> ${content.description}</p>
+                    <img src="${content.image}" alt="Video Thumbnail">
+                    <button onclick="consumeVideo('${content.url}')">Consume</button>
+                `;
+                consumedContentDiv.appendChild(contentDiv);
             });
         }
 
@@ -130,9 +152,22 @@
 
             // Set the current edit index
             currentEditIndex = index;
+        }
 
-            // Optionally, log to console for debugging
-            console.log('Editing content:', content);
+        function deleteContent(index) {
+            // Remove the content from savedContent
+            savedContent.splice(index, 1);
+            localStorage.setItem('savedContent', JSON.stringify(savedContent));
+            displaySavedContent(); // Refresh the displayed content
+        }
+
+        function markAsConsumed(index) {
+            // Move the content to consumedContent
+            const content = savedContent.splice(index, 1)[0]; // Remove and get the content
+            consumedContent.push(content);
+            localStorage.setItem('consumedContent', JSON.stringify(consumedContent));
+            localStorage.setItem('savedContent', JSON.stringify(savedContent));
+            displaySavedContent(); // Refresh the displayed content
         }
 
         // Display any saved content on page load
