@@ -85,12 +85,12 @@
             <option value="Podcast">Podcast</option>
         </select>
         <button class="btn" onclick="clearFilter()">Clear Filter</button>
-        <button class="btn" onclick="addContent()">Add Content</button>
+        <button class="btn" onclick="addNewContent()">Add New Content</button>
     </div>
 
     <div id="notification">Content saved successfully!</div>
 
-    <div id="content-list" style="display: flex;">
+    <div id="content-list">
         <div class="column" id="unread-column" ondrop="drop(event, 'unread')" ondragover="allowDrop(event)">
             <h2>Unread Content</h2>
         </div>
@@ -142,6 +142,7 @@
                                 <option value="Podcast" ${content.type === 'Podcast' ? 'selected' : ''}>Podcast</option>
                             </select>
                             <input type="text" value="${content.priority}" onblur="updateContent(${index}, 'priority', this.value)" />
+                            <button class="btn" onclick="editContent(${index})">Edit</button>
                             <button class="btn btn-delete" onclick="deleteContent(${index})">Delete</button>
                         </div>
                     </div>
@@ -157,6 +158,16 @@
             const cardContent = document.querySelector(`#card-${index} .card-content`);
             const isVisible = cardContent.style.display === 'block';
             cardContent.style.display = isVisible ? 'none' : 'block';
+        }
+
+        // Edit Content
+        function editContent(index) {
+            const card = document.getElementById(`card-${index}`);
+            const inputs = card.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.removeAttribute('readonly');
+                input.style.border = '1px solid #007bff';
+            });
         }
 
         // Update Content
@@ -178,13 +189,7 @@
                 return matchesTitle && matchesType;
             });
 
-            displayFilteredContent(filteredContent);
-        }
-
-        // Display Filtered Content
-        function displayFilteredContent(filteredContent) {
-            document.getElementById('unread-column').innerHTML = createColumn(filteredContent.filter(content => !content.read));
-            document.getElementById('read-column').innerHTML = createColumn(filteredContent.filter(content => content.read));
+            displaySavedContent(filteredContent);
         }
 
         // Clear Filter
@@ -211,18 +216,28 @@
         }
 
         // Add New Content
-        function addContent() {
-            const newContent = {
-                title: prompt("Enter title:"),
-                description: prompt("Enter description:"),
-                url: prompt("Enter URL:"),
-                type: prompt("Enter type (Article, Video, Podcast):"),
-                priority: prompt("Enter priority:")
-            };
-            if (newContent.title) {
+        function addNewContent() {
+            const title = prompt("Enter the title:");
+            const description = prompt("Enter the description:");
+            const url = prompt("Enter the URL:");
+            const type = prompt("Enter the type (Article, Video, Podcast):");
+            const priority = prompt("Enter the priority:");
+
+            if (title && description && url && type && priority) {
+                const newContent = {
+                    title: title,
+                    description: description,
+                    url: url,
+                    type: type,
+                    priority: priority,
+                    read: false
+                };
                 contentArray.push(newContent);
                 localStorage.setItem('contents', JSON.stringify(contentArray));
                 displaySavedContent();
+                showNotification();
+            } else {
+                alert("All fields are required.");
             }
         }
 
