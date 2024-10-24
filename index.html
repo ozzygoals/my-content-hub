@@ -66,6 +66,14 @@
         .hidden {
             display: none;
         }
+        a {
+            color: blue;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -142,7 +150,7 @@
                 collapsibleTitle.className = 'collapsible';
                 collapsibleTitle.onclick = () => toggleDetails(index);
                 collapsibleTitle.innerHTML = `
-                    <h3 class="${content.consumed ? 'consumed' : ''}">${content.title}</h3>
+                    <a href="${content.url}" target="_blank" class="${content.consumed ? 'consumed' : ''}">${content.title}</a>
                     <div>
                         <button onclick="toggleConsume(${index}); event.stopPropagation()">${content.consumed ? 'Mark as Incomplete' : 'Mark as Complete'}</button>
                         <button onclick="startEdit(${index}); event.stopPropagation()">Edit</button>
@@ -182,6 +190,9 @@
             const priority = document.getElementById('content-priority').value;
             const type = document.getElementById('content-type').value;
 
+            // Add a field for URL (you may want to add a corresponding input in your form)
+            const url = prompt("Enter the URL for this content:");
+
             const contentItem = {
                 title,
                 tags,
@@ -189,7 +200,8 @@
                 priority,
                 type,
                 date: new Date().toISOString(),
-                consumed: false
+                consumed: false,
+                url // New URL field
             };
 
             if (currentEditIndex === -1) {
