@@ -127,7 +127,12 @@
             document.getElementById('content-url').value = content.url;
             document.getElementById('content-tags').value = content.tags.join(', ');
             document.getElementById('content-priority').value = content.priority;
+
+            // Set the current edit index
             currentEditIndex = index;
+
+            // Optionally, log to console for debugging
+            console.log('Editing content:', content);
         }
 
         // Display any saved content on page load
