@@ -107,11 +107,11 @@
     </div>
 
     <div class="content-columns">
-        <div class="content-column" id="unconsumed-content">
-            <h2>Unconsumed</h2>
+        <div class="content-column" id="incomplete-content">
+            <h2>Incomplete</h2>
         </div>
-        <div class="content-column" id="consumed-content">
-            <h2>Consumed</h2>
+        <div class="content-column" id="complete-content">
+            <h2>Complete</h2>
         </div>
     </div>
 
@@ -120,10 +120,10 @@
         let currentEditIndex = -1;
 
         function displaySavedContent() {
-            const unconsumedContent = document.getElementById('unconsumed-content');
-            const consumedContent = document.getElementById('consumed-content');
-            unconsumedContent.innerHTML = '<h2>Unconsumed</h2>';
-            consumedContent.innerHTML = '<h2>Consumed</h2>';
+            const incompleteContent = document.getElementById('incomplete-content');
+            const completeContent = document.getElementById('complete-content');
+            incompleteContent.innerHTML = '<h2>Incomplete</h2>';
+            completeContent.innerHTML = '<h2>Complete</h2>';
 
             const filter = document.getElementById('filter-tags').value.toLowerCase();
             const filteredContent = savedContent.filter(item => {
@@ -145,9 +145,9 @@
                     <button onclick="deleteContent(${index})">Delete</button>
                 `;
                 if (content.consumed) {
-                    consumedContent.appendChild(contentItem);
+                    completeContent.appendChild(contentItem);
                 } else {
-                    unconsumedContent.appendChild(contentItem);
+                    incompleteContent.appendChild(contentItem);
                 }
             });
         }
