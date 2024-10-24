@@ -3,70 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saved Content Manager</title>
+    <title>Curatorer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px;
+            margin-top: 10px;
         }
         .content-item {
-            margin-bottom: 10px;
             border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 5px;
+            margin-top: 10px;
+            overflow: hidden; /* Ensures collapsible content is hidden properly */
         }
-        .content-title {
-            font-weight: bold;
-            cursor: pointer;
+        .consumed {
+            text-decoration: line-through;
+            color: gray;
+        }
+        .filter-section {
+            margin-top: 20px;
         }
         .collapsible {
-            display: none;
-            margin-top: 10px;
+            cursor: pointer;
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            background-color: #f1f1f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .content-details {
+            display: none; /* Initially hidden */
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        .content-columns {
+            display: flex;
+            justify-content: space-between;
+        }
+        .content-column {
+            width: 48%;
         }
         .hidden {
             display: none;
         }
-        .edit-button, .delete-button {
-            margin-right: 5px;
+        a {
+            color: blue;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .edit-mode input, .edit-mode textarea, .edit-mode select {
+            width: 100%;
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
-    <h1>Saved Content Manager</h1>
+    <h1>Curatorer</h1>
+    
+    <div class="collapsible" onclick="toggleForm()">Add New Content</div>
+    <form id="content-form" class="hidden">
+        <div class="form-group">
+            <label for="content-title">Title:</label>
+            <input type="text" id="content-title" required>
+        </div>
+         <div class="form-group">
+            <label for="content-url">URL:</label>
+            <input type="url" id="content-url" placeholder="Enter the URL">
+        </div>
+        <div class="form-group">
+            <label for="content-tags">Tags (comma-separated):</label>
+            <input type="text" id="content-tags">
+        </div>
+        <div class="form-group">
+            <label for="content-priority">Priority:</label>
+            <select id="content-priority">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="content-type">Type:</label>
+            <select id="content-type">
+                <option value="article">Article</option>
+                <option value="video">Video</option>
+                <option value="podcast">Podcast</option>
+                <option value="book">Book</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="content-description">Description:</label>
+            <textarea id="content-description" rows="4"></textarea>
+        </div>
+        <button type="button" onclick="saveContent()">Save Content</button>
+    </form>
 
-    <div id="content-form" class="hidden">
-        <h3>Add Content</h3>
-        <label for="content-title">Title:</label>
-        <input type="text" id="content-title"><br><br>
-        <label for="content-url">URL:</label>
-        <input type="text" id="content-url"><br><br>
-        <label for="content-tags">Tags (comma separated):</label>
-        <input type="text" id="content-tags"><br><br>
-        <label for="content-priority">Priority:</label>
-        <select id="content-priority">
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-        </select><br><br>
-        <label for="content-type">Type:</label>
-        <select id="content-type">
-            <option value="article">Article</option>
-            <option value="video">Video</option>
-            <option value="podcast">Podcast</option>
-        </select><br><br>
-        <label for="content-description">Description:</label>
-        <textarea id="content-description"></textarea><br><br>
-        <button onclick="saveContent()">Save Content</button>
-        <button onclick="toggleForm()">Cancel</button>
+    <div class="filter-section">
+        <label for="filter-tags">Filter by Tags or Type:</label>
+        <input type="text" id="filter-tags" oninput="filterContent()">
     </div>
 
-    <button onclick="toggleForm()">Add New Content</button>
-
-    <div id="content-list">
-        <h3>Incomplete Content</h3>
-        <div id="incomplete-content"></div>
-
-        <h3>Completed Content</h3>
-        <div id="complete-content"></div>
+    <div class="content-columns">
+        <div class="content-column" id="incomplete-content">
+            <h2>Incomplete</h2>
+        </div>
+        <div class="content-column" id="complete-content">
+            <h2>Complete</h2>
+        </div>
     </div>
 
     <script>
@@ -76,58 +142,70 @@
         function displaySavedContent() {
             const incompleteContent = document.getElementById('incomplete-content');
             const completeContent = document.getElementById('complete-content');
-            incompleteContent.innerHTML = '';
-            completeContent.innerHTML = '';
+            incompleteContent.innerHTML = '<h2>Incomplete</h2>';
+            completeContent.innerHTML = '<h2>Complete</h2>';
 
-            savedContent.forEach((content, index) => {
+            const filter = document.getElementById('filter-tags').value.toLowerCase();
+            const filteredContent = savedContent.filter(item => {
+                return item.tags.some(tag => tag.toLowerCase().includes(filter)) ||
+                       item.type.toLowerCase().includes(filter) ||
+                       item.title.toLowerCase().includes(filter);
+            });
+
+            filteredContent.forEach((content, index) => {
                 const contentItem = document.createElement('div');
-                contentItem.classList.add('content-item');
+                contentItem.className = 'content-item';
+                const uniqueID = `content-${index}`;
 
                 const collapsibleTitle = document.createElement('div');
-                collapsibleTitle.classList.add('content-title');
-                collapsibleTitle.innerHTML = content.title;
-                collapsibleTitle.onclick = () => toggleDetails(index);
-
-                const details = document.createElement('div');
-                details.classList.add('collapsible');
-                details.id = `content-${index}`;
-
-                let buttonsHTML = `
-                    <button class="edit-button" onclick="startEdit(${index})">Edit</button>
-                    <button class="delete-button" onclick="deleteContent(${index})">Delete</button>
+                collapsibleTitle.className = 'collapsible';
+                collapsibleTitle.setAttribute('data-index', uniqueID); // Assign unique ID
+                collapsibleTitle.onclick = (event) => toggleDetails(event, uniqueID); // Pass unique ID
+                collapsibleTitle.innerHTML = `
+                    <a href="${content.url}" target="_blank" class="${content.consumed ? 'consumed' : ''}">${content.title}</a>
+                    <div>
+                        <button onclick="toggleConsume(${index}); event.stopPropagation()"> ${content.consumed ? 'Mark as Incomplete' : 'Mark as Complete'}</button>
+                        <button onclick="startEdit(${index}); event.stopPropagation()">Edit</button>
+                        <button onclick="deleteContent(${index}); event.stopPropagation()">Delete</button>
+                    </div>
                 `;
 
+                const details = document.createElement('div');
+                details.className = 'content-details';
+                details.id = uniqueID; // Assign unique ID to details div
+
                 if (content.editMode) {
+                    details.classList.add('edit-mode');
                     details.innerHTML = `
-                        <p>Title: <input type="text" value="${content.title}" onchange="editField(${index}, 'title', this.value)"></p>
-                        <p>URL: <input type="text" value="${content.url}" onchange="editField(${index}, 'url', this.value)"></p>
-                        <p>Tags: <input type="text" value="${content.tags.join(', ')}" onchange="editField(${index}, 'tags', this.value.split(',').map(tag => tag.trim()))"></p>
-                        <p>Priority: <select onchange="editField(${index}, 'priority', this.value)">
+                        <input type="text" value="${content.title}" onchange="editField(${index}, 'title', this.value)" />
+                        <input type="url" value="${content.url}" onchange="editField(${index}, 'url', this.value)" />
+                        <textarea rows="2" onchange="editField(${index}, 'description', this.value)">${content.description}</textarea>
+                        <input type="text" value="${content.tags.join(', ')}" onchange="editField(${index}, 'tags', this.value.split(',').map(tag => tag.trim()))" />
+                        <select onchange="editField(${index}, 'priority', this.value)">
                             <option value="low" ${content.priority === 'low' ? 'selected' : ''}>Low</option>
                             <option value="medium" ${content.priority === 'medium' ? 'selected' : ''}>Medium</option>
                             <option value="high" ${content.priority === 'high' ? 'selected' : ''}>High</option>
-                        </select></p>
-                        <p>Type: <select onchange="editField(${index}, 'type', this.value)">
+                        </select>
+                        <select onchange="editField(${index}, 'type', this.value)">
                             <option value="article" ${content.type === 'article' ? 'selected' : ''}>Article</option>
                             <option value="video" ${content.type === 'video' ? 'selected' : ''}>Video</option>
                             <option value="podcast" ${content.type === 'podcast' ? 'selected' : ''}>Podcast</option>
-                        </select></p>
-                        <p>Description: <textarea onchange="editField(${index}, 'description', this.value)">${content.description}</textarea></p>
-                        <button onclick="endEdit()">Done</button>
+                            <option value="book" ${content.type === 'book' ? 'selected' : ''}>Book</option>
+                        </select>
+                        <button onclick="toggleEdit(${index}, false)">Save</button>
                     `;
                 } else {
                     details.innerHTML = `
-                        <p>Description: ${content.description}</p>
-                        <p>Tags: ${content.tags.join(', ')}</p>
-                        <p>Priority: ${content.priority}</p>
-                        <p>Type: ${content.type}</p>
-                        ${buttonsHTML}
+                        <p><strong>Tags:</strong> ${content.tags.join(', ')}</p>
+                        <p><strong>Priority:</strong> ${content.priority}</p>
+                        <p><strong>Type:</strong> ${content.type}</p>
+                        <p><strong>Description:</strong> ${content.description || 'No description'}</p>
                     `;
                 }
 
                 contentItem.appendChild(collapsibleTitle);
                 contentItem.appendChild(details);
-
+                
                 if (content.consumed) {
                     completeContent.appendChild(contentItem);
                 } else {
@@ -136,78 +214,41 @@
             });
         }
 
-        function toggleDetails(index) {
-            savedContent.forEach((content, i) => {
-                if (i !== index) {
-                    content.editMode = false; // Exit edit mode on other cards
-                    document.getElementById(`content-${i}`).style.display = 'none'; // Collapse other cards
-                }
-            });
+        function toggleDetails(event, uniqueID) {
+            const contentDetails = document.getElementById(uniqueID);
+            contentDetails.style.display = contentDetails.style.display === 'block' ? 'none' : 'block';
+        }
 
-            const details = document.getElementById(`content-${index}`);
-            const content = savedContent[index];
-            if (details.style.display === 'block') {
-                details.style.display = 'none';
-            } else {
-                details.style.display = 'block';
-            }
-
-            localStorage.setItem('savedContent', JSON.stringify(savedContent));
-            displaySavedContent();
+        function toggleForm() {
+            const contentForm = document.getElementById('content-form');
+            contentForm.classList.toggle('hidden');
         }
 
         function saveContent() {
             const title = document.getElementById('content-title').value;
-            const url = document.getElementById('content-url').value;
+            const url = document.getElementById('content-url').value || '#';
             const tags = document.getElementById('content-tags').value.split(',').map(tag => tag.trim());
             const priority = document.getElementById('content-priority').value;
             const type = document.getElementById('content-type').value;
             const description = document.getElementById('content-description').value;
 
-            const content = {
-                title,
-                url,
-                tags,
-                priority,
-                type,
-                description,
-                consumed: false,
-                editMode: false
-            };
+            const newContent = { title, url, tags, priority, type, description, consumed: false, editMode: false };
 
-            if (currentEditIndex > -1) {
-                savedContent[currentEditIndex] = content;
-                currentEditIndex = -1;
+            if (currentEditIndex === -1) {
+                savedContent.push(newContent);
             } else {
-                savedContent.push(content);
+                savedContent[currentEditIndex] = newContent;
+                currentEditIndex = -1;
             }
 
             localStorage.setItem('savedContent', JSON.stringify(savedContent));
             displaySavedContent();
-            clearForm();
-        }
-
-        function editField(index, field, value) {
-            savedContent[index][field] = value;
-            localStorage.setItem('savedContent', JSON.stringify(savedContent));
-            displaySavedContent();
+            toggleForm();
         }
 
         function toggleConsume(index) {
             savedContent[index].consumed = !savedContent[index].consumed;
             localStorage.setItem('savedContent', JSON.stringify(savedContent));
-            displaySavedContent();
-        }
-
-        function startEdit(index) {
-            savedContent[index].editMode = true;
-            displaySavedContent();
-        }
-
-        function endEdit() {
-            savedContent.forEach(content => {
-                content.editMode = false;
-            });
             displaySavedContent();
         }
 
@@ -217,20 +258,25 @@
             displaySavedContent();
         }
 
-        function toggleForm() {
-            const form = document.getElementById('content-form');
-            form.classList.toggle('hidden');
+        function startEdit(index) {
+            toggleEdit(index, true);
         }
 
-        function clearForm() {
-            document.getElementById('content-title').value = '';
-            document.getElementById('content-url').value = '';
-            document.getElementById('content-tags').value = '';
-            document.getElementById('content-priority').value = 'low';
-            document.getElementById('content-type').value = 'article';
-            document.getElementById('content-description').value = '';
+        function toggleEdit(index, mode) {
+            savedContent[index].editMode = mode;
+            localStorage.setItem('savedContent', JSON.stringify(savedContent));
+            displaySavedContent();
         }
 
+        function editField(index, field, value) {
+            savedContent[index][field] = value;
+        }
+
+        function filterContent() {
+            displaySavedContent();
+        }
+
+        // Initialize display
         displaySavedContent();
     </script>
 </body>
