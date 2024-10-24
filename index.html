@@ -35,7 +35,6 @@
             margin-top: 10px;
         }
         .consumed {
-            text-decoration: line-through;
             color: gray;
         }
         .filter-section {
@@ -138,9 +137,9 @@
                 contentItem.className = 'content-item';
                 contentItem.innerHTML = `
                     <h3 class="${content.consumed ? 'consumed' : ''}">
-                        <a href="${content.url}" target="_blank">${content.title}</a>
+                        <a href="${content.url}" target="_blank">${content.consumed ? content.title : '<span>' + content.title + '</span>'}</a>
                     </h3>
-                    <div class="collapsed ${!content.consumed ? '' : 'hidden'}">
+                    <div class="collapsed ${!content.consumed ? '' : 'hidden'}" onclick="toggleDetails(${index})">
                         <p><strong>Tags:</strong> ${content.tags.join(', ')}</p>
                         <p><strong>Priority:</strong> ${content.priority}</p>
                         <p><strong>Type:</strong> ${content.type}</p>
@@ -219,6 +218,11 @@
         function toggleForm() {
             const form = document.getElementById('content-form');
             form.classList.toggle('hidden');
+        }
+
+        function toggleDetails(index) {
+            const details = document.querySelectorAll('.collapsed')[index];
+            details.classList.toggle('hidden');
         }
 
         // Initial display
