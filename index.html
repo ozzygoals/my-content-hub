@@ -206,25 +206,28 @@
             <button class="btn" onclick="saveContent()">Save Content</button>
         </div>
 
-        <div class="filter-section">
-            <h2>Filter Content</h2>
-            <div class="form-group">
-                <label for="filter-title">Filter by Title</label>
-                <input type="text" id="filter-title" placeholder="Enter title to filter">
-            </div>
+        <!-- Collapsible Filter Section -->
+        <button class="collapsible">Filter Content</button>
+        <div class="content">
+            <div class="filter-section">
+                <div class="form-group">
+                    <label for="filter-title">Filter by Title</label>
+                    <input type="text" id="filter-title" placeholder="Enter title to filter">
+                </div>
 
-            <div class="form-group">
-                <label for="filter-type">Filter by Type</label>
-                <select id="filter-type">
-                    <option value="">All</option>
-                    <option value="Article">Article</option>
-                    <option value="Video">Video</option>
-                    <option value="Podcast">Podcast</option>
-                    <option value="Book">Book</option>
-                </select>
-            </div>
+                <div class="form-group">
+                    <label for="filter-type">Filter by Type</label>
+                    <select id="filter-type">
+                        <option value="">All</option>
+                        <option value="Article">Article</option>
+                        <option value="Video">Video</option>
+                        <option value="Podcast">Podcast</option>
+                        <option value="Book">Book</option>
+                    </select>
+                </div>
 
-            <button class="clear-btn" onclick="clearFilter()">Clear Filter</button>
+                <button class="clear-btn" onclick="clearFilter()">Clear Filter</button>
+            </div>
         </div>
 
         <h2>Saved Content</h2>
@@ -292,9 +295,10 @@
                                         <span><strong>Type:</strong> ${content.type}</span>
                                         <span><strong>Priority:</strong> ${content.priority}</span>
                                     </div>
-                                    <p><strong>Description:</strong> <input type="text" value="${content.description}" onchange="editContent(${index}, 'description', this.value)"></p>
-                                    <p><strong>Consumed:</strong> <input type="checkbox" onchange="editContent(${index}, 'consumed', this.checked)" ${content.consumed ? 'checked' : ''}> Mark as Read</p>
-                                    <button onclick="deleteContent(${index})" class="btn btn-delete">Delete</button>
+                                    <p><strong>Description:</strong> ${content.description}</p>
+                                    <button onclick="editContent(${index})">Edit</button>
+                                    <button onclick="toggleReadStatus(${index})">${content.consumed ? 'Mark as Unread' : 'Mark as Read'}</button>
+                                    <button class="btn btn-delete" onclick="deleteContent(${index})">Delete</button>
                                 </div>
                             </div>
                         `).join('')}
@@ -304,55 +308,24 @@
 
             contentList.innerHTML = `
                 <div class="column">
-                    <h2>Unread Content</h2>
+                    <h3>Unread</h3>
                     ${createColumn(unread)}
                 </div>
                 <div class="column">
-                    <h2>Read Content</h2>
+                    <h3>Read</h3>
                     ${createColumn(read)}
                 </div>
             `;
-
-            // Add event listeners for collapsible buttons
-            document.querySelectorAll('.collapsible').forEach(button => {
-                button.addEventListener('click', function() {
-                    this.classList.toggle('active');
-                    const content = this.nextElementSibling;
-                    if (content.style.display === "block") {
-                        content.style.display = "none";
-                    } else {
-                        content.style.display = "block";
-                    }
-                });
-            });
-        }
-
-        // Edit Content
-        function editContent(index, field, value) {
-            if (field === 'consumed') {
-                contentArray[index].consumed = value;
-            } else {
-                contentArray[index][field] = value;
-            }
-            localStorage.setItem('contents', JSON.stringify(contentArray));
-            displaySavedContent();
-        }
-
-        // Delete Content
-        function deleteContent(index) {
-            contentArray.splice(index, 1);
-            localStorage.setItem('contents', JSON.stringify(contentArray));
-            displaySavedContent();
         }
 
         // Filter Content
         function filterContent() {
-            const filterTitle = document.getElementById('filter-title').value.toLowerCase();
-            const filterType = document.getElementById('filter-type').value;
+            const titleFilter = document.getElementById('filter-title').value.toLowerCase();
+            const typeFilter = document.getElementById('filter-type').value;
 
             const filteredContent = contentArray.filter(content => {
-                const matchesTitle = content.title.toLowerCase().includes(filterTitle);
-                const matchesType = filterType ? content.type === filterType : true;
+                const matchesTitle = content.title.toLowerCase().includes(titleFilter);
+                const matchesType = typeFilter ? content.type === typeFilter : true;
                 return matchesTitle && matchesType;
             });
 
@@ -372,11 +345,47 @@
             notification.style.display = 'block';
             setTimeout(() => {
                 notification.style.display = 'none';
-            }, 2000);
+            }, 3000);
         }
 
-        // Initial Display
+        // Delete Content
+        function deleteContent(index) {
+            contentArray.splice(index, 1);
+            localStorage.setItem('contents', JSON.stringify(contentArray));
+            displaySavedContent();
+        }
+
+        // Edit Content
+        function editContent(index) {
+            const content = contentArray[index];
+
+            document.getElementById('content-title').value = content.title;
+            document.getElementById('content-description').value = content.description;
+            document.getElementById('content-url').value = content.url;
+            document.getElementById('content-type').value = content.type;
+            document.getElementById('content-priority').value = content.priority;
+
+            // Remove the content after editing
+            deleteContent(index);
+        }
+
+        // Toggle Read Status
+        function toggleReadStatus(index) {
+            contentArray[index].consumed = !contentArray[index].consumed;
+            localStorage.setItem('contents', JSON.stringify(contentArray));
+            displaySavedContent();
+        }
+
+        // Initialize
         displaySavedContent();
+        const coll = document.getElementsByClassName("collapsible");
+        for (let i = 0; i < coll.length; i++) {
+            coll[i].addEventListener("click", function () {
+                this.classList.toggle("active");
+                const content = this.nextElementSibling;
+                content.classList.toggle("active");
+            });
+        }
     </script>
 </body>
 </html>
