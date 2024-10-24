@@ -27,6 +27,17 @@
             border-radius: 5px;
             background-color: #fff;
             position: relative;
+            transition: max-height 0.2s ease-in-out;
+            overflow: hidden;
+        }
+        .card-title {
+            cursor: pointer;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .card-content {
+            display: none;
+            margin-top: 10px;
         }
         .active {
             background-color: #e6f7ff;
@@ -107,11 +118,7 @@
             const content = contentArray[index];
 
             // Update the status and re-render
-            if (status === 'read') {
-                content.read = true;
-            } else {
-                content.read = false;
-            }
+            content.read = status === 'read';
             localStorage.setItem('contents', JSON.stringify(contentArray));
             displaySavedContent();
         }
@@ -123,17 +130,20 @@
 
             const createColumn = (contents) => {
                 return contents.map((content, index) => `
-                    <div class="content-card" draggable="true" ondragstart="drag(event, ${index})">
-                        <input type="text" value="${content.title}" onblur="updateContent(${index}, 'title', this.value)" />
-                        <input type="text" value="${content.description || 'No description provided.'}" onblur="updateContent(${index}, 'description', this.value)" />
-                        <input type="url" value="${content.url}" onblur="updateContent(${index}, 'url', this.value)" />
-                        <select onblur="updateContent(${index}, 'type', this.value)">
-                            <option value="Article" ${content.type === 'Article' ? 'selected' : ''}>Article</option>
-                            <option value="Video" ${content.type === 'Video' ? 'selected' : ''}>Video</option>
-                            <option value="Podcast" ${content.type === 'Podcast' ? 'selected' : ''}>Podcast</option>
-                        </select>
-                        <input type="text" value="${content.priority}" onblur="updateContent(${index}, 'priority', this.value)" />
-                        <button class="btn" onclick="deleteContent(${index})">Delete</button>
+                    <div class="content-card" id="card-${index}">
+                        <div class="card-title" onclick="toggleCard(${index})">${content.title}</div>
+                        <div class="card-content">
+                            <input type="text" value="${content.description || 'No description provided.'}" onblur="updateContent(${index}, 'description', this.value)" />
+                            <input type="url" value="${content.url}" onblur="updateContent(${index}, 'url', this.value)" />
+                            <select onblur="updateContent(${index}, 'type', this.value)">
+                                <option value="Article" ${content.type === 'Article' ? 'selected' : ''}>Article</option>
+                                <option value="Video" ${content.type === 'Video' ? 'selected' : ''}>Video</option>
+                                <option value="Podcast" ${content.type === 'Podcast' ? 'selected' : ''}>Podcast</option>
+                            </select>
+                            <input type="text" value="${content.priority}" onblur="updateContent(${index}, 'priority', this.value)" />
+                            <button class="btn" onclick="editContent(${index})">Edit</button>
+                            <button class="btn btn-delete" onclick="deleteContent(${index})">Delete</button>
+                        </div>
                     </div>
                 `).join('');
             };
@@ -142,11 +152,29 @@
             document.getElementById('read-column').innerHTML = createColumn(read);
         }
 
+        // Toggle Card Display
+        function toggleCard(index) {
+            const cardContent = document.querySelector(`#card-${index} .card-content`);
+            const isVisible = cardContent.style.display === 'block';
+            cardContent.style.display = isVisible ? 'none' : 'block';
+        }
+
+        // Edit Content
+        function editContent(index) {
+            const card = document.getElementById(`card-${index}`);
+            const inputs = card.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.removeAttribute('readonly');
+                input.style.border = '1px solid #007bff';
+            });
+        }
+
         // Update Content
         function updateContent(index, field, value) {
             contentArray[index][field] = value;
             localStorage.setItem('contents', JSON.stringify(contentArray));
             displaySavedContent();
+            showNotification();
         }
 
         // Filter Content
