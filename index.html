@@ -158,11 +158,12 @@
 
                 const collapsibleTitle = document.createElement('div');
                 collapsibleTitle.className = 'collapsible';
-                collapsibleTitle.onclick = () => toggleDetails(index);
+                collapsibleTitle.setAttribute('data-index', index); // Add data-index attribute
+                collapsibleTitle.onclick = (event) => toggleDetails(event, index); // Pass event to toggleDetails
                 collapsibleTitle.innerHTML = `
                     <a href="${content.url}" target="_blank" class="${content.consumed ? 'consumed' : ''}">${content.title}</a>
                     <div>
-                        <button onclick="toggleConsume(${index}); event.stopPropagation()">${content.consumed ? 'Mark as Incomplete' : 'Mark as Complete'}</button>
+                        <button onclick="toggleConsume(${index}); event.stopPropagation()"> ${content.consumed ? 'Mark as Incomplete' : 'Mark as Complete'}</button>
                         <button onclick="startEdit(${index}); event.stopPropagation()">Edit</button>
                         <button onclick="deleteContent(${index}); event.stopPropagation()">Delete</button>
                     </div>
@@ -170,6 +171,7 @@
 
                 const details = document.createElement('div');
                 details.className = 'content-details';
+                details.setAttribute('data-details-index', index); // Assign index to details section
                 if (content.editMode) {
                     details.classList.add('edit-mode');
                     details.innerHTML = `
@@ -210,32 +212,42 @@
             });
         }
 
-        function toggleDetails(index) {
-            const details = document.querySelectorAll('.content-details')[index];
-            details.style.display = (details.style.display === 'block') ? 'none' : 'block';
+        function toggleDetails(event, index) {
+            const allDetails = document.querySelectorAll('.content-details');
+            allDetails.forEach((detail, i) => {
+                if (i === index) {
+                    // Toggle the clicked one
+                    detail.style.display = (detail.style.display === 'block') ? 'none' : 'block';
+                } else {
+                    // Close all others
+                    detail.style.display = 'none';
+                }
+            });
         }
 
         function saveContent() {
             const title = document.getElementById('content-title').value;
             const tags = document.getElementById('content-tags').value.split(',').map(tag => tag.trim());
-            const description = document.getElementById('content-description').value;
+            const url = document.getElementById('content-url').value;
             const priority = document.getElementById('content-priority').value;
             const type = document.getElementById('content-type').value;
-            const url = document.getElementById('content-url').value;
+            const description = document.getElementById('content-description').value;
 
-            const newContent = { title, tags, description, priority, type, url, consumed: false, editMode: false };
+            const newContent = {
+                title,
+                tags,
+                url,
+                priority,
+                type,
+                description,
+                consumed: false,
+                editMode: false
+            };
 
-            if (currentEditIndex >= 0) {
-                savedContent[currentEditIndex] = newContent;
-                currentEditIndex = -1;
-            } else {
-                savedContent.push(newContent);
-            }
-
+            savedContent.push(newContent);
             localStorage.setItem('savedContent', JSON.stringify(savedContent));
-            document.getElementById('content-form').reset();
+            resetForm();
             displaySavedContent();
-            toggleForm(); // Hide the form after saving
         }
 
         function toggleForm() {
@@ -243,9 +255,27 @@
             form.classList.toggle('hidden');
         }
 
+        function resetForm() {
+            document.getElementById('content-title').value = '';
+            document.getElementById('content-tags').value = '';
+            document.getElementById('content-url').value = '';
+            document.getElementById('content-description').value = '';
+            document.getElementById('content-priority').value = 'low';
+            document.getElementById('content-type').value = 'article';
+        }
+
         function toggleConsume(index) {
             savedContent[index].consumed = !savedContent[index].consumed;
             localStorage.setItem('savedContent', JSON.stringify(savedContent));
+            displaySavedContent();
+        }
+
+        function filterContent() {
+            displaySavedContent();
+        }
+
+        function startEdit(index) {
+            savedContent[index].editMode = true;
             displaySavedContent();
         }
 
@@ -255,18 +285,10 @@
             displaySavedContent();
         }
 
-        function filterContent() {
-            displaySavedContent();
-        }
-
-        function toggleEdit(index, editMode) {
-            savedContent[index].editMode = editMode;
+        function toggleEdit(index, save) {
+            savedContent[index].editMode = !save;
             localStorage.setItem('savedContent', JSON.stringify(savedContent));
             displaySavedContent();
-        }
-
-        function startEdit(index) {
-            toggleEdit(index, true);
         }
 
         function editField(index, field, value) {
@@ -274,7 +296,7 @@
             localStorage.setItem('savedContent', JSON.stringify(savedContent));
         }
 
-        displaySavedContent();
+        window.onload = displaySavedContent;
     </script>
 </body>
 </html>
