@@ -85,6 +85,10 @@
             <label for="content-title">Title:</label>
             <input type="text" id="content-title" required>
         </div>
+         <div class="form-group">
+            <label for="content-url">URL:</label>
+            <input type="url" id="content-url" placeholder="Enter the URL">
+        </div>
         <div class="form-group">
             <label for="content-tags">Tags (comma-separated):</label>
             <input type="text" id="content-tags">
@@ -109,10 +113,6 @@
         <div class="form-group">
             <label for="content-description">Description:</label>
             <textarea id="content-description" rows="4"></textarea>
-        </div>
-        <div class="form-group">
-            <label for="content-url">URL:</label>
-            <input type="url" id="content-url" placeholder="Enter the URL">
         </div>
         <button type="button" onclick="saveContent()">Save Content</button>
     </form>
