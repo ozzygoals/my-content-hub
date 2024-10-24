@@ -15,14 +15,14 @@
             <h2>Save Your Content</h2>
             <form id="save-content">
                 <label for="content-title">Title:</label>
-                <input type="text" id="content-title" required>
-                
+                <input type="text" id="content-title" required readonly>
+
                 <label for="content-url">URL:</label>
                 <input type="url" id="content-url" required>
-                
-                <label for="content-tags">Tags (comma-separated):</label>
-                <input type="text" id="content-tags" placeholder="e.g. education, technology">
-                
+
+                <label for="content-tags">Tags (auto-filled):</label>
+                <input type="text" id="content-tags" placeholder="e.g. education, technology" readonly>
+
                 <label for="content-priority">Priority:</label>
                 <select id="content-priority">
                     <option value="normal">Normal</option>
@@ -33,7 +33,6 @@
                 <button type="submit">Save Content</button>
             </form>
 
-            <!-- Add the search bar here -->
             <input type="text" id="search-bar" placeholder="Search content..." oninput="filterContent()">
 
             <div id="content-list">
@@ -121,16 +120,24 @@
             }
         }
 
-        // Function to fetch and set the title from the URL
-        async function fetchTitle(url) {
+        // Function to fetch and set the title and tags from the URL
+        async function fetchContentData(url) {
             try {
                 const response = await fetch(url);
                 const text = await response.text();
+                
+                // Extract title
                 const titleMatch = text.match(/<title>(.*?)<\/title>/);
-                return titleMatch ? titleMatch[1] : 'No Title Found';
+                const title = titleMatch ? titleMatch[1] : 'No Title Found';
+
+                // Extract tags (example logic, you might need to adjust based on actual HTML structure)
+                const tagMatch = text.match(/<meta name="keywords" content="(.*?)"/);
+                const tags = tagMatch ? tagMatch[1].split(',').map(tag => tag.trim()) : [];
+
+                return { title, tags };
             } catch (error) {
-                console.error('Error fetching title:', error);
-                return 'No Title Found';
+                console.error('Error fetching content:', error);
+                return { title: 'No Title Found', tags: [] };
             }
         }
 
@@ -138,42 +145,14 @@
         document.getElementById('content-url').addEventListener('input', async function() {
             const url = this.value;
             if (url) {
-                const title = await fetchTitle(url);
-                document.getElementById('content-title').value = title;
+                const { title, tags } = await fetchContentData(url);
+                document.getElementById('content-title').value = title; // Set title preview
+                document.getElementById('content-tags').value = tags.join(', '); // Set tags preview
             } else {
                 document.getElementById('content-title').value = ''; // Clear title if URL is empty
+                document.getElementById('content-tags').value = ''; // Clear tags if URL is empty
             }
         });
-    </script>
-    <script>
-    // Initialize an array to hold saved content
-    let savedContent = [];
-
-    // Function to save content
-    function saveContent() {
-        const contentInput = document.getElementById('content-input');
-        const contentValue = contentInput.value.trim();
-
-        if (contentValue) {
-            savedContent.push(contentValue); // Add to the savedContent array
-            contentInput.value = ''; // Clear the input field
-            displaySavedContent(); // Update displayed content
-        } else {
-            alert('Please enter a valid content link or title.');
-        }
-    }
-
-    // Function to display saved content
-    function displaySavedContent() {
-        const savedList = document.getElementById('saved-list');
-        savedList.innerHTML = ''; // Clear current list
-
-        savedContent.forEach((content, index) => {
-            const listItem = document.createElement('li');
-            listItem.textContent = content;
-            savedList.appendChild(listItem);
-        });
-    }
     </script>
 </body>
 </html>
