@@ -276,10 +276,10 @@
             });
         }
 
-        // Function to toggle collapsible content
-        function toggleDetails(event, id) {
-            const element = document.getElementById(id);
-            element.style.display = element.style.display === 'block' ? 'none' : 'block';
+        function toggleDetails(event, contentID) {
+            event.stopPropagation();
+            const details = document.getElementById(contentID);
+            details.style.display = details.style.display === 'block' ? 'none' : 'block';
         }
 
         function saveContent() {
@@ -290,24 +290,33 @@
             const type = document.getElementById('content-type').value;
             const description = document.getElementById('content-description').value;
 
-            const content = { title, url, tags, priority, type, description, consumed: false, editMode: false };
+            const content = {
+                title,
+                url,
+                tags,
+                priority,
+                type,
+                description,
+                consumed: false,
+                editMode: false
+            };
 
-            if (currentEditIndex === -1) {
-                savedContent.push(content);
-            } else {
+            if (currentEditIndex > -1) {
                 savedContent[currentEditIndex] = content;
                 currentEditIndex = -1;
+            } else {
+                savedContent.push(content);
             }
 
             localStorage.setItem('savedContent', JSON.stringify(savedContent));
-            document.getElementById('content-form').reset();
-            toggleForm();
             displaySavedContent();
+            clearForm();
         }
 
-        function toggleForm() {
-            const form = document.getElementById('content-form');
-            form.classList.toggle('hidden');
+        function editField(index, field, value) {
+            savedContent[index][field] = value;
+            localStorage.setItem('savedContent', JSON.stringify(savedContent));
+            displaySavedContent();
         }
 
         function toggleConsume(index) {
@@ -317,13 +326,7 @@
         }
 
         function startEdit(index) {
-            savedContent[index].editMode = !savedContent[index].editMode;
-            displaySavedContent();
-        }
-
-        function editField(index, field, value) {
-            savedContent[index][field] = value;
-            localStorage.setItem('savedContent', JSON.stringify(savedContent));
+            savedContent[index].editMode = true;
             displaySavedContent();
         }
 
@@ -333,11 +336,25 @@
             displaySavedContent();
         }
 
+        function toggleForm() {
+            const form = document.getElementById('content-form');
+            form.classList.toggle('hidden');
+        }
+
+        function clearForm() {
+            document.getElementById('content-title').value = '';
+            document.getElementById('content-url').value = '';
+            document.getElementById('content-tags').value = '';
+            document.getElementById('content-priority').value = 'low';
+            document.getElementById('content-type').value = 'article';
+            document.getElementById('content-description').value = '';
+        }
+
         function filterContent() {
             displaySavedContent();
         }
 
-        window.onload = displaySavedContent;
+        displaySavedContent();
     </script>
 </body>
 </html>
