@@ -9,8 +9,8 @@
         form { margin-bottom: 20px; }
         input, select, button, textarea { display: block; margin: 10px 0; width: 300px; }
         #saved-content, #consumed-content { margin-top: 20px; }
-        .content-item { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; text-align: left; } /* Align content to the left */
-        .content-item img { max-width: 150px; height: auto; margin-top: 10px; } /* Standard image size for all entries */
+        .content-item { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; text-align: left; }
+        .content-item img { max-width: 150px; height: auto; margin-top: 10px; }
         .button-container { margin-top: 10px; }
     </style>
 </head>
@@ -183,7 +183,7 @@
             // Return some dummy metadata for the Audible book
             return {
                 description: '', // Blank for Audible
-                image: 'https://via.placeholder.com/150' // Placeholder image for Audible (or you can use a specific smaller image URL)
+                image: 'https://via.placeholder.com/150' // Placeholder image for Audible
             };
         }
 
@@ -234,16 +234,15 @@
         }
 
         function markAsConsumed(index) {
-            const content = savedContent[index];
-            consumedContent.push(content);
-            savedContent.splice(index, 1);
+            const consumedItem = savedContent.splice(index, 1)[0];
+            consumedContent.push(consumedItem);
             localStorage.setItem('savedContent', JSON.stringify(savedContent));
             localStorage.setItem('consumedContent', JSON.stringify(consumedContent));
             displaySavedContent();
+            displayConsumedContent();
         }
 
-        // Initial display of saved content
-        displaySavedContent();
+        displaySavedContent(); // Initial call to display saved content
     </script>
 </body>
 </html>
