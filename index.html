@@ -32,14 +32,16 @@
         
         <button type="submit">Save Content</button>
     </form>
+
+    <!-- Add the search bar here -->
+    <input type="text" id="search-bar" placeholder="Search content..." oninput="filterContent()">
+
     <div id="content-list">
         <h3>Your Saved Content:</h3>
         <ul id="saved-content"></ul>
     </div>
 </section>
 
-
-</section>
 
         <p>This is where I will save and organize my content.</p>
     </main>
@@ -78,7 +80,19 @@
         link.click();
         document.body.removeChild(link);
     }
+
+    // Add the filterContent function here
+    function filterContent() {
+        const searchTerm = document.getElementById('search-bar').value.toLowerCase();
+        const items = contentList.getElementsByTagName('li');
+
+        for (let item of items) {
+            const title = item.innerText.toLowerCase();
+            item.style.display = title.includes(searchTerm) ? 'list-item' : 'none';
+        }
+    }
 </script>
+
 
 
 
