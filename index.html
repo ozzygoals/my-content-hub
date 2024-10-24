@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Content Metadata Saver</title>
+    <title>Curatorer</title>
     <style>
         body { font-family: Arial, sans-serif; }
         form { margin-bottom: 20px; }
-        input, button, textarea { display: block; margin: 10px 0; width: 300px; }
+        input, select, button, textarea { display: block; margin: 10px 0; width: 300px; }
         #saved-content, #consumed-content { margin-top: 20px; }
         .content-item { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
         .button-container { margin-top: 10px; }
@@ -15,7 +15,7 @@
     </style>
 </head>
 <body>
-    <h1>Content Metadata Saver</h1>
+    <h1>Curatorer</h1>
     
     <!-- Filter Input -->
     <input type="text" id="filter-input" placeholder="Filter by Tags or Keywords" oninput="filterContent()">
@@ -24,7 +24,12 @@
         <input type="text" id="content-title" placeholder="Title" required>
         <input type="text" id="content-url" placeholder="Content URL (YouTube, Audible, etc.)" required>
         <input type="text" id="content-tags" placeholder="Tags (comma separated)">
-        <input type="text" id="content-priority" placeholder="Priority">
+        <select id="content-priority">
+            <option value="">Select Priority</option>
+            <option value="Normal">Normal</option>
+            <option value="Urgent">Urgent</option>
+            <option value="Low">Low</option>
+        </select>
         <button type="submit">Save Content</button>
     </form>
 
@@ -57,7 +62,7 @@
                     <h3>${content.title}</h3>
                     <p><strong>Tags:</strong> ${content.tags.join(', ')}</p>
                     <p><strong>Priority:</strong> ${content.priority}</p>
-                    <p><strong>Description:</strong> ${content.description}</p>
+                    <p><strong>Description:</strong> ${content.description || 'No description available.'}</p>
                     <img src="${content.image}" alt="Content Thumbnail">
                     <div class="button-container">
                         <button onclick="consumeVideo('${content.url}')">Consume</button>
@@ -83,7 +88,7 @@
                     <h3>${content.title}</h3>
                     <p><strong>Tags:</strong> ${content.tags.join(', ')}</p>
                     <p><strong>Priority:</strong> ${content.priority}</p>
-                    <p><strong>Description:</strong> ${content.description}</p>
+                    <p><strong>Description:</strong> ${content.description || 'No description available.'}</p>
                     <img src="${content.image}" alt="Content Thumbnail">
                     <div class="button-container">
                         <button onclick="consumeVideo('${content.url}')">Consume</button>
@@ -113,7 +118,7 @@
                 url: url,
                 tags: tags,
                 priority: priority,
-                description: content.description || 'No description available.',
+                description: content.description || '', // Blank for Audible
                 image: content.image || 'https://via.placeholder.com/150' // Placeholder image if none found
             };
 
@@ -158,7 +163,7 @@
             const videoId = url.includes('youtube.com') ? url.split('v=')[1]?.split('&')[0] || url.split('/').pop() : null;
             if (!videoId) return {};
 
-            const apiKey = 'YOUR_YOUTUBE_API_KEY'; // Your YouTube Data API key
+            const apiKey = 'AIzaSyCq9q77OarbSy9FwJPr9aCmsgjc-f7dXT8'; // Your YouTube Data API key
             const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`);
             if (response.ok) {
                 const data = await response.json();
@@ -177,7 +182,7 @@
 
             // Return some dummy metadata for the Audible book
             return {
-                description: `Details about the Audible book titled "${audibleBookTitle}". This book is highly recommended for its engaging narrative and insightful themes.`,
+                description: '', // Blank for Audible
                 image: 'https://play-lh.googleusercontent.com/JG7l65_C92nOlTxhPLhHPkYjXutvkPZF1XMv1QCkCwtozsJ0FGw1tj5-lWEbaFx77A' // Generic Audible image
             };
         }
@@ -204,7 +209,7 @@
             document.getElementById('content-tags').value = content.tags.join(', ');
             document.getElementById('content-priority').value = content.priority;
 
-            // Set the current edit index
+            // Set the current edit index to the consumed content
             currentEditIndex = index;
         }
 
@@ -222,12 +227,10 @@
 
         function markAsConsumed(index) {
             const content = savedContent[index];
-            consumedContent.push(content);
-            localStorage.setItem('consumedContent', JSON.stringify(consumedContent));
-            deleteContent(index); // Also delete from savedContent
+            consumedContent.push(content); // Add to consumed content
+            deleteContent(index); // Remove from saved content
         }
-        
-        // Display initial content
+
         displaySavedContent();
     </script>
 </body>
