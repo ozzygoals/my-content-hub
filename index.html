@@ -14,11 +14,26 @@
         <section id="content-form">
             <h2>Save Your Content</h2>
             <form id="save-content">
+                <label for="content-title">Title:</label>
+                <input type="text" id="content-title" required>
+                
                 <label for="content-url">URL:</label>
                 <input type="url" id="content-url" required>
                 
+                <label for="content-tags">Tags (comma-separated):</label>
+                <input type="text" id="content-tags" placeholder="e.g. education, technology">
+                
+                <label for="content-priority">Priority:</label>
+                <select id="content-priority">
+                    <option value="normal">Normal</option>
+                    <option value="important">Important</option>
+                    <option value="urgent">Urgent</option>
+                </select>
+                
                 <button type="submit">Save Content</button>
             </form>
+
+            <input type="text" id="search-bar" placeholder="Search content..." oninput="filterContent()">
 
             <div id="content-list">
                 <h3>Your Saved Content:</h3>
@@ -32,40 +47,87 @@
     </footer>
     
     <script>
-        const apiKey = 'AIzaSyCq9q77OarbSy9FwJPr9aCmsgjc-f7dXT8';  // Your API key
+        let savedContent = JSON.parse(localStorage.getItem('savedContent')) || [];
+        
         const form = document.getElementById('save-content');
         const contentList = document.getElementById('saved-content');
 
-        form.addEventListener('submit', async function(event) {
+        form.addEventListener('submit', function(event) {
             event.preventDefault();
-            
+
             const url = document.getElementById('content-url').value;
+            const tags = document.getElementById('content-tags').value.split(',').map(tag => tag.trim());
+            const priority = document.getElementById('content-priority').value;
 
-            // Fetch metadata from the URL using the API
-            const response = await fetch(`https://api.example.com/getMeta?key=${apiKey}&url=${encodeURIComponent(url)}`);
-            const data = await response.json();
+            // Extracting video ID from URL for YouTube
+            const videoId = url.split('v=')[1]?.split('&')[0]; // Safely extract the video ID
+            if (!videoId) {
+                alert('Invalid YouTube URL');
+                return;
+            }
 
-            // Assuming the API returns title, description, image, and tags
-            const title = data.title || "Generated Title from URL"; // Fallback title
-            const description = data.description || "No description available.";
-            const imageUrl = data.image || "placeholder.jpg"; // Fallback image
-            const tags = data.tags || ["tag1", "tag2"]; // Fallback tags
+            // Fetch video details using the YouTube API
+            fetch(`https://www.googleapis.com/youtube/v3/videos?id=${videoId}&key=YOUR_YOUTUBE_API_KEY&part=snippet`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.items.length > 0) {
+                        const video = data.items[0];
+                        const title = video.snippet.title;
+                        const image = video.snippet.thumbnails.high.url;
+                        const description = video.snippet.description;
 
-            const listItem = document.createElement('li');
-            listItem.innerHTML = `
-                <div class="preview-frame">
-                    <img src="${imageUrl}" alt="Preview Image" style="width: 100px; height: auto;">
-                </div>
-                <h4>${title}</h4>
-                <p>Tags: ${tags.join(', ')}</p>
-                <p><strong>Priority:</strong> Normal</p>
-                <p>${description}</p>
-            `;
-            contentList.appendChild(listItem);
+                        const content = {
+                            title: title,
+                            url: url,
+                            tags: tags,
+                            priority: priority,
+                            description: description,
+                            image: image
+                        };
 
-            // Clear the form
-            form.reset();
+                        savedContent.push(content);
+                        localStorage.setItem('savedContent', JSON.stringify(savedContent));
+                        displaySavedContent();
+                        form.reset();
+                    } else {
+                        alert('Video not found');
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching video details:', err);
+                    alert('Error fetching video details. Please check the URL.');
+                });
         });
+
+        function displaySavedContent() {
+            contentList.innerHTML = ''; // Clear current list
+
+            savedContent.forEach(content => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <img src="${content.image}" alt="Preview" style="width:100px;height:auto;margin-right:10px;">
+                        <div>
+                            <h4>${content.title}</h4>
+                            <p>Tags: ${content.tags.join(', ')}</p>
+                            <p>Priority: ${content.priority}</p>
+                            <p>Description: ${content.description}</p>
+                        </div>
+                    </div>
+                `;
+                contentList.appendChild(listItem);
+            });
+        }
+
+        function filterContent() {
+            const searchTerm = document.getElementById('search-bar').value.toLowerCase();
+            const items = contentList.getElementsByTagName('li');
+
+            for (let item of items) {
+                const title = item.innerText.toLowerCase();
+                item.style.display = title.includes(searchTerm) ? 'list-item' : 'none';
+            }
+        }
     </script>
 </body>
 </html>
