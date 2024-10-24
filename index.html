@@ -23,6 +23,13 @@
         <label for="content-tags">Tags (comma-separated):</label>
         <input type="text" id="content-tags" placeholder="e.g. education, technology">
         
+        <label for="content-priority">Priority:</label>
+        <select id="content-priority">
+            <option value="normal">Normal</option>
+            <option value="important">Important</option>
+            <option value="urgent">Urgent</option>
+        </select>
+        
         <button type="submit">Save Content</button>
     </form>
     <div id="content-list">
@@ -30,6 +37,7 @@
         <ul id="saved-content"></ul>
     </div>
 </section>
+
 
 </section>
 
@@ -39,7 +47,7 @@
         <p>&copy; 2024 My Content Hub</p>
     </footer>
 </body>
-    <script>
+  <script>
     const form = document.getElementById('save-content');
     const contentList = document.getElementById('saved-content');
 
@@ -49,15 +57,17 @@
         const title = document.getElementById('content-title').value;
         const url = document.getElementById('content-url').value;
         const tags = document.getElementById('content-tags').value.split(',').map(tag => tag.trim());
+        const priority = document.getElementById('content-priority').value;
 
         const listItem = document.createElement('li');
-        listItem.innerHTML = `<a href="${url}" target="_blank">${title}</a> (Tags: ${tags.join(', ')})`;
+        listItem.innerHTML = `<a href="${url}" target="_blank">${title}</a> (Tags: ${tags.join(', ')}) - <strong>${priority}</strong>`;
         contentList.appendChild(listItem);
 
         // Clear the form
         form.reset();
     });
 </script>
+
 
 
 </html>
