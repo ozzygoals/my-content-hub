@@ -94,6 +94,9 @@
         const contentList = document.getElementById('saved-content');
         const recommendationsList = document.getElementById('recommended-content');
 
+        // Load saved content on page load
+        document.addEventListener('DOMContentLoaded', loadSavedContent);
+
         form.addEventListener('submit', function(event) {
             event.preventDefault();
             
@@ -102,55 +105,74 @@
             const tags = document.getElementById('content-tags').value.split(',').map(tag => tag.trim());
             const priority = document.getElementById('content-priority').value;
 
-            const listItem = document.createElement('li');
-            listItem.className = 'content-entry';
-            listItem.innerHTML = `
-                <div class="preview-frame">
-                    <img src="${getPreviewImage(url)}" alt="Preview">
-                </div>
-                <div class="content-details">
-                    <h4>${title}</h4>
-                    <div class="content-tags">Tags: ${tags.join(', ')}</div>
-                    <div class="priority-label">Priority: ${priority}</div>
-                    <p>${generateDescription(title)}</p>
-                    <button onclick="downloadContent('${url}', '${title}')">Download</button>
-                </div>
-            `;
-            contentList.appendChild(listItem);
+            const contentData = {
+                title,
+                url,
+                tags,
+                priority,
+                description: generateDescription(title), // Generate description
+                image: getPreviewImage(url) // Fetch image
+            };
 
-            // Update recommendations
-            updateRecommendations(tags, title);
-
-            // Clear the form
+            saveContentToLocal(contentData);
+            displayContent(contentData);
             form.reset();
         });
 
         function fetchPreview() {
             const url = document.getElementById('content-url').value;
-            const titleInput = document.getElementById('content-title');
-            titleInput.value = getTitleFromUrl(url);
+            document.getElementById('content-title').value = getTitleFromUrl(url);
             document.getElementById('content-tags').value = getTagsFromUrl(url);
         }
 
         function getPreviewImage(url) {
             // Placeholder logic for fetching preview image from URL
-            // Replace with actual logic to fetch image from URL if available
-            return 'https://via.placeholder.com/120'; // Placeholder image URL
+            return 'https://via.placeholder.com/120'; // Replace with actual image fetching logic
         }
 
         function getTitleFromUrl(url) {
-            // Placeholder logic to generate title from URL
-            return 'Generated Title from URL'; // Modify as needed
+            // Simulated logic to generate title from URL
+            return url.split('/').pop().replace(/[-_]/g, ' ').replace(/\..+$/, ''); // Simplified title
         }
 
         function getTagsFromUrl(url) {
-            // Placeholder logic to generate tags from URL
-            return 'tag1, tag2'; // Modify as needed
+            // Simulated logic to generate tags from URL
+            return 'tag1, tag2'; // Update to extract real tags
         }
 
         function generateDescription(title) {
-            // Placeholder for generating a description based on the title
             return `This is a brief description of ${title}. It summarizes the key points and value of the content.`;
+        }
+
+        function saveContentToLocal(content) {
+            let savedContents = JSON.parse(localStorage.getItem('savedContents')) || [];
+            savedContents.push(content);
+            localStorage.setItem('savedContents', JSON.stringify(savedContents));
+        }
+
+        function loadSavedContent() {
+            let savedContents = JSON.parse(localStorage.getItem('savedContents')) || [];
+            savedContents.forEach(content => {
+                displayContent(content);
+            });
+        }
+
+        function displayContent(content) {
+            const listItem = document.createElement('li');
+            listItem.className = 'content-entry';
+            listItem.innerHTML = `
+                <div class="preview-frame">
+                    <img src="${content.image}" alt="Preview">
+                </div>
+                <div class="content-details">
+                    <h4>${content.title}</h4>
+                    <div class="content-tags">Tags: ${content.tags.join(', ')}</div>
+                    <div class="priority-label">Priority: ${content.priority}</div>
+                    <p>${content.description}</p>
+                    <button onclick="downloadContent('${content.url}', '${content.title}')">Download</button>
+                </div>
+            `;
+            contentList.appendChild(listItem);
         }
 
         function downloadContent(url, title) {
