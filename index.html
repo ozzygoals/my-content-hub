@@ -30,7 +30,7 @@
     <ul id="saved-content"></ul>
 
     <script>
-        const apiKey = 'AIzaSyCq9q77OarbSy9FwJPr9aCmsgjc-f7dXT8';  // Your API key
+        const apiKey = 'AIzaSyCq9q77OarbSy9FwJPr9aCmsgjc-f7dXT8'; // Your API key
         const form = document.getElementById('save-content');
         const contentList = document.getElementById('saved-content');
 
@@ -38,7 +38,8 @@
             event.preventDefault();
             
             const url = document.getElementById('content-url').value;
-            const videoId = url.split('v=')[1]?.split('&')[0]; // Extract video ID
+            // Extract the video ID from the URL
+            const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop(); // Added to handle shortened URLs
 
             if (!videoId) {
                 alert('Invalid URL. Please provide a YouTube video URL.');
