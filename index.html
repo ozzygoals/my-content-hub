@@ -30,6 +30,15 @@
             <option value="Urgent">Urgent</option>
             <option value="Low">Low</option>
         </select>
+        <select id="content-type">
+            <option value="">Select Content Type</option>
+            <option value="Book">Book</option>
+            <option value="Streaming">Streaming</option>
+            <option value="Article">Article</option>
+            <option value="Podcast">Podcast</option>
+            <option value="YouTube">YouTube</option>
+            <option value="Audible">Audible</option>
+        </select>
         <button type="submit">Save Content</button>
     </form>
 
@@ -107,8 +116,40 @@
             const url = document.getElementById('content-url').value;
             const tags = document.getElementById('content-tags').value.split(',').map(tag => tag.trim());
             const priority = document.getElementById('content-priority').value;
+            const contentType = document.getElementById('content-type').value;
 
-            // Fetch metadata based on URL type
+            // Get the image based on the content type
+            let image;
+            switch (contentType) {
+                case 'Book':
+                    image = 'https://elearningindustry.com/wp-content/uploads/2016/05/top-10-books-every-college-student-read-e1464023124869.jpeg';
+                    break;
+                case 'Streaming':
+                    image = 'https://variety.com/wp-content/uploads/2022/10/featured_Dare_to_Stream_SR_v6.jpg?w=910&h=511&crop=1';
+                    break;
+                case 'Article':
+                    image = 'https://cdn.creazilla.com/cliparts/845892/magazine-clipart-md.png';
+                    break;
+                case 'Podcast':
+                    image = 'https://cdn.ocs.yale.edu/wp-content/uploads/sites/77/2021/08/Neon-podcast-logo.jpeg';
+                    break;
+                case 'YouTube':
+                    const youTubeContent = await fetchYouTubeMetadata(url);
+                    if (youTubeContent) {
+                        image = youTubeContent.image;
+                    } else {
+                        image = 'https://via.placeholder.com/150'; // Placeholder if no image found
+                    }
+                    break;
+                case 'Audible':
+                    const audibleContent = await fetchAudibleMetadata(url);
+                    image = audibleContent.image || 'https://via.placeholder.com/150'; // Placeholder if no image found
+                    break;
+                default:
+                    image = 'https://via.placeholder.com/150'; // Default placeholder image
+            }
+
+            // Fetch metadata based on URL type if not YouTube or Audible
             const content = await fetchMetadata(url);
             if (!content) return; // If no content is returned, exit
 
@@ -119,7 +160,7 @@
                 tags: tags,
                 priority: priority,
                 description: content.description || '', // Blank for Audible
-                image: content.image || 'https://via.placeholder.com/150' // Placeholder image if none found
+                image: image // Use image based on content type
             };
 
             if (currentEditIndex > -1) {
@@ -165,33 +206,28 @@
 
             const apiKey = 'AIzaSyCq9q77OarbSy9FwJPr9aCmsgjc-f7dXT8'; // Your YouTube Data API key
             const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`);
-            if (response.ok) {
-                const data = await response.json();
-                if (data.items.length > 0) {
-                    return {
-                        description: data.items[0].snippet.description,
-                        image: data.items[0].snippet.thumbnails.default.url
-                    };
-                }
-            }
-            return {}; // Return empty if no metadata is found
-        }
+            if (!response.ok) return {};
 
-        async function fetchAudibleMetadata(url) {
-            const audibleBookTitle = url.split('/').pop(); // Example: extract title from URL
-
-            // Return some dummy metadata for the Audible book
+            const data = await response.json();
+            const videoData = data.items[0]?.snippet;
             return {
-                description: '', // Blank for Audible
-                image: 'https://via.placeholder.com/150' // Placeholder image for Audible
+                title: videoData?.title,
+                description: videoData?.description,
+                image: videoData?.thumbnails?.high?.url || ''
             };
         }
 
-        async function fetchOtherContentMetadata(url) {
-            // Dummy implementation for other content types (e.g., streaming services, articles)
+        async function fetchAudibleMetadata(url) {
+            // Implement a similar fetch method for Audible metadata
+            // This is a placeholder example, as Audible's API usage might differ
+            const response = await fetch(`https://api.audible.com/your-endpoint?url=${encodeURIComponent(url)}`);
+            if (!response.ok) return {};
+
+            const data = await response.json();
             return {
-                description: '', // Optionally fetch descriptions for other content types
-                image: 'https://via.placeholder.com/150' // Placeholder image for other content types
+                title: data.title,
+                description: data.description,
+                image: data.image || ''
             };
         }
 
@@ -205,19 +241,7 @@
             document.getElementById('content-url').value = content.url;
             document.getElementById('content-tags').value = content.tags.join(', ');
             document.getElementById('content-priority').value = content.priority;
-
-            // Set the current edit index
-            currentEditIndex = index;
-        }
-
-        function editConsumedContent(index) {
-            const content = consumedContent[index];
-            document.getElementById('content-title').value = content.title;
-            document.getElementById('content-url').value = content.url;
-            document.getElementById('content-tags').value = content.tags.join(', ');
-            document.getElementById('content-priority').value = content.priority;
-
-            // Set the current edit index
+            document.getElementById('content-type').value = content.type; // Assuming you will add type property in content object
             currentEditIndex = index;
         }
 
@@ -227,22 +251,20 @@
             displaySavedContent();
         }
 
+        function markAsConsumed(index) {
+            const content = savedContent[index];
+            consumedContent.push(content);
+            savedContent.splice(index, 1);
+            localStorage.setItem('savedContent', JSON.stringify(savedContent));
+            localStorage.setItem('consumedContent', JSON.stringify(consumedContent));
+            displaySavedContent();
+        }
+
         function deleteConsumedContent(index) {
             consumedContent.splice(index, 1);
             localStorage.setItem('consumedContent', JSON.stringify(consumedContent));
             displayConsumedContent();
         }
-
-        function markAsConsumed(index) {
-            const consumedItem = savedContent.splice(index, 1)[0];
-            consumedContent.push(consumedItem);
-            localStorage.setItem('savedContent', JSON.stringify(savedContent));
-            localStorage.setItem('consumedContent', JSON.stringify(consumedContent));
-            displaySavedContent();
-            displayConsumedContent();
-        }
-
-        displaySavedContent(); // Initial call to display saved content
     </script>
 </body>
 </html>
