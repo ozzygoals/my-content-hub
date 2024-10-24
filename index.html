@@ -140,7 +140,7 @@
                     <p><strong>Priority:</strong> ${content.priority}</p>
                     <p><strong>Type:</strong> ${content.type}</p>
                     <p><strong>Description:</strong> ${content.description || 'No description'}</p>
-                    <button onclick="toggleConsume(${index})">${content.consumed ? 'Mark as Unread' : 'Mark as Read'}</button>
+                    <button onclick="toggleConsume(${index})">${content.consumed ? 'Mark as Incomplete' : 'Mark as Complete'}</button>
                     <button onclick="startEdit(${index})">Edit</button>
                     <button onclick="deleteContent(${index})">Delete</button>
                 `;
