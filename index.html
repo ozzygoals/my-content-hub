@@ -85,11 +85,12 @@
             <option value="Podcast">Podcast</option>
         </select>
         <button class="btn" onclick="clearFilter()">Clear Filter</button>
+        <button class="btn" onclick="addContent()">Add Content</button>
     </div>
 
     <div id="notification">Content saved successfully!</div>
 
-    <div id="content-list">
+    <div id="content-list" style="display: flex;">
         <div class="column" id="unread-column" ondrop="drop(event, 'unread')" ondragover="allowDrop(event)">
             <h2>Unread Content</h2>
         </div>
@@ -130,7 +131,7 @@
 
             const createColumn = (contents) => {
                 return contents.map((content, index) => `
-                    <div class="content-card" id="card-${index}">
+                    <div class="content-card" id="card-${index}" draggable="true" ondragstart="drag(event, ${index})">
                         <div class="card-title" onclick="toggleCard(${index})">${content.title}</div>
                         <div class="card-content">
                             <input type="text" value="${content.description || 'No description provided.'}" onblur="updateContent(${index}, 'description', this.value)" />
@@ -141,7 +142,6 @@
                                 <option value="Podcast" ${content.type === 'Podcast' ? 'selected' : ''}>Podcast</option>
                             </select>
                             <input type="text" value="${content.priority}" onblur="updateContent(${index}, 'priority', this.value)" />
-                            <button class="btn" onclick="editContent(${index})">Edit</button>
                             <button class="btn btn-delete" onclick="deleteContent(${index})">Delete</button>
                         </div>
                     </div>
@@ -157,16 +157,6 @@
             const cardContent = document.querySelector(`#card-${index} .card-content`);
             const isVisible = cardContent.style.display === 'block';
             cardContent.style.display = isVisible ? 'none' : 'block';
-        }
-
-        // Edit Content
-        function editContent(index) {
-            const card = document.getElementById(`card-${index}`);
-            const inputs = card.querySelectorAll('input, select');
-            inputs.forEach(input => {
-                input.removeAttribute('readonly');
-                input.style.border = '1px solid #007bff';
-            });
         }
 
         // Update Content
@@ -188,7 +178,13 @@
                 return matchesTitle && matchesType;
             });
 
-            displaySavedContent(filteredContent);
+            displayFilteredContent(filteredContent);
+        }
+
+        // Display Filtered Content
+        function displayFilteredContent(filteredContent) {
+            document.getElementById('unread-column').innerHTML = createColumn(filteredContent.filter(content => !content.read));
+            document.getElementById('read-column').innerHTML = createColumn(filteredContent.filter(content => content.read));
         }
 
         // Clear Filter
@@ -212,6 +208,22 @@
             setTimeout(() => {
                 notification.style.display = 'none';
             }, 2000);
+        }
+
+        // Add New Content
+        function addContent() {
+            const newContent = {
+                title: prompt("Enter title:"),
+                description: prompt("Enter description:"),
+                url: prompt("Enter URL:"),
+                type: prompt("Enter type (Article, Video, Podcast):"),
+                priority: prompt("Enter priority:")
+            };
+            if (newContent.title) {
+                contentArray.push(newContent);
+                localStorage.setItem('contents', JSON.stringify(contentArray));
+                displaySavedContent();
+            }
         }
 
         // Initial Display
