@@ -7,326 +7,126 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            width: 80%;
-            margin: 20px auto;
-            background-color: #fff;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            background-color: #4CAF50;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .btn-delete {
-            background-color: #f44336;
-        }
-
-        .btn:hover {
-            opacity: 0.9;
-        }
-
-        .content-item {
-            margin: 20px 0;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            background-color: #fff;
-        }
-
-        .content-item h3 {
-            margin-top: 0;
-            color: #4CAF50;
-        }
-
-        .content-item p {
-            margin: 5px 0;
-            color: #333;
-        }
-
-        .content-item button {
-            margin-right: 10px;
-        }
-
-        .filter-section {
-            margin-bottom: 30px;
-            padding: 10px 20px;
-            border-radius: 5px;
-            background-color: #f9f9f9;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .notification {
-            display: none;
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px;
-            text-align: center;
-            margin-bottom: 20px;
-            border-radius: 5px;
-        }
-
-        .collapsible {
-            background-color: #f1f1f1;
-            color: #333;
-            cursor: pointer;
-            padding: 10px;
-            border: none;
-            text-align: left;
-            outline: none;
-            font-size: 16px;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
-        }
-
-        .collapsible.active {
-            background-color: #ddd;
-        }
-
-        .content {
-            display: none;
-            padding: 10px 0;
-        }
-
-        .content.active {
-            display: block;
-        }
-
-        .clear-btn {
-            background-color: #f44336;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .form-container {
-            margin-bottom: 20px;
-        }
-
-        .content-columns {
+            margin: 20px;
             display: flex;
-            justify-content: space-between;
+            gap: 20px;
         }
-
         .column {
-            width: 48%;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            overflow-y: auto;
+            height: 400px;
         }
-
-        .header-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            font-weight: bold;
+        .content-card {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #fff;
+            cursor: move;
+        }
+        .active {
+            background-color: #e6f7ff;
+        }
+        .btn {
+            margin-top: 5px;
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-delete {
+            background-color: #dc3545;
+        }
+        #filter-container {
+            margin-bottom: 20px;
+        }
+        #notification {
+            display: none;
+            background-color: #28a745;
+            color: white;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Content Tracker</h1>
+    <div id="filter-container">
+        <input type="text" id="filter-title" placeholder="Filter by title">
+        <select id="filter-type" onchange="filterContent()">
+            <option value="">All Types</option>
+            <option value="Article">Article</option>
+            <option value="Video">Video</option>
+            <option value="Podcast">Podcast</option>
+        </select>
+        <button class="btn" onclick="clearFilter()">Clear Filter</button>
+    </div>
 
-        <div class="notification" id="notification">
-            Content saved successfully!
+    <div id="notification">Content saved successfully!</div>
+
+    <div id="content-list">
+        <div class="column" id="unread-column" ondrop="drop(event, 'unread')" ondragover="allowDrop(event)">
+            <h2>Unread Content</h2>
         </div>
-
-        <!-- Collapsible Form -->
-        <button class="collapsible active">Add New Content</button>
-        <div class="content active form-container">
-            <div class="form-group">
-                <label for="content-title">Content Title</label>
-                <input type="text" id="content-title" placeholder="Enter title" required>
-            </div>
-
-            <div class="form-group">
-                <label for="content-description">Content Description</label>
-                <input type="text" id="content-description" placeholder="Enter description">
-            </div>
-
-            <div class="form-group">
-                <label for="content-url">Content URL</label>
-                <input type="text" id="content-url" placeholder="Enter URL">
-            </div>
-
-            <div class="form-group">
-                <label for="content-type">Content Type</label>
-                <select id="content-type">
-                    <option value="Article">Article</option>
-                    <option value="Video">Video</option>
-                    <option value="Podcast">Podcast</option>
-                    <option value="Book">Book</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="content-priority">Priority</label>
-                <select id="content-priority">
-                    <option value="High">High</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Low">Low</option>
-                </select>
-            </div>
-
-            <button class="btn" onclick="saveContent()">Save Content</button>
+        <div class="column" id="read-column" ondrop="drop(event, 'read')" ondragover="allowDrop(event)">
+            <h2>Read Content</h2>
         </div>
-
-        <!-- Collapsible Filter Section -->
-        <button class="collapsible">Filter Content</button>
-        <div class="content">
-            <div class="filter-section">
-                <div class="form-group">
-                    <label for="filter-title">Filter by Title</label>
-                    <input type="text" id="filter-title" placeholder="Enter title to filter">
-                </div>
-
-                <div class="form-group">
-                    <label for="filter-type">Filter by Type</label>
-                    <select id="filter-type">
-                        <option value="">All</option>
-                        <option value="Article">Article</option>
-                        <option value="Video">Video</option>
-                        <option value="Podcast">Podcast</option>
-                        <option value="Book">Book</option>
-                    </select>
-                </div>
-
-                <button class="clear-btn" onclick="clearFilter()">Clear Filter</button>
-            </div>
-        </div>
-
-        <h2>Saved Content</h2>
-        <div id="content-list" class="content-columns"></div>
     </div>
 
     <script>
         let contentArray = JSON.parse(localStorage.getItem('contents')) || [];
 
-        document.getElementById('filter-title').addEventListener('input', filterContent);
-        document.getElementById('filter-type').addEventListener('change', filterContent);
+        // Allow Drop Function
+        function allowDrop(event) {
+            event.preventDefault();
+        }
 
-        // Save Content
-        function saveContent() {
-            const title = document.getElementById('content-title').value.trim();
-            const description = document.getElementById('content-description').value.trim();
-            const url = document.getElementById('content-url').value.trim();
-            const type = document.getElementById('content-type').value;
-            const priority = document.getElementById('content-priority').value;
+        // Drag Function
+        function drag(event, index) {
+            event.dataTransfer.setData("text/plain", index);
+        }
 
-            if (!title || !priority) {
-                alert('Please fill in both title and priority fields.');
-                return;
+        // Drop Function
+        function drop(event, status) {
+            event.preventDefault();
+            const index = event.dataTransfer.getData("text/plain");
+            const content = contentArray[index];
+
+            // Update the status and re-render
+            if (status === 'read') {
+                content.read = true;
+            } else {
+                content.read = false;
             }
-
-            const content = {
-                title,
-                description,
-                url,
-                type,
-                priority,
-                consumed: false
-            };
-
-            contentArray.push(content);
             localStorage.setItem('contents', JSON.stringify(contentArray));
             displaySavedContent();
-
-            // Clear form fields
-            clearFormFields();
-            showNotification();
         }
 
-        // Clear Form Fields
-        function clearFormFields() {
-            document.getElementById('content-title').value = '';
-            document.getElementById('content-description').value = '';
-            document.getElementById('content-url').value = '';
-            document.getElementById('content-type').value = 'Article';
-            document.getElementById('content-priority').value = 'High';
-        }
+        // Display Saved Content
+        function displaySavedContent() {
+            const unread = contentArray.filter(content => !content.read);
+            const read = contentArray.filter(content => content.read);
 
-        // Display content sorted by unread first
-        function displaySavedContent(contents = contentArray) {
-            const contentList = document.getElementById('content-list');
-            contentList.innerHTML = '';
-
-            const unread = contents.filter(content => !content.consumed);
-            const read = contents.filter(content => content.consumed);
-
-            const createColumn = (items) => {
-                return `
-                    <div class="column">
-                        ${items.map((content, index) => `
-                            <div class="content-item">
-                                <h3><a href="${content.url}" target="_blank">${content.title}</a></h3>
-                                <button class="collapsible" onclick="toggleDetails(this)">Show Details</button>
-                                <div class="content">
-                                    <div class="header-row">
-                                        <span><strong>Type:</strong> ${content.type}</span>
-                                        <span><strong>Priority:</strong> ${content.priority}</span>
-                                    </div>
-                                    <p>${content.description || 'No description provided.'}</p>
-                                    <button class="btn" onclick="editContent(${index})">Edit</button>
-                                    <button class="btn-delete" onclick="deleteContent(${index})">Delete</button>
-                                </div>
-                            </div>
-                        `).join('')}
+            const createColumn = (contents) => {
+                return contents.map((content, index) => `
+                    <div class="content-card" draggable="true" ondragstart="drag(event, ${index})">
+                        <strong>${content.title}</strong>
+                        <p>${content.description || 'No description provided.'}</p>
+                        <button class="btn" onclick="editContent(${index})">Edit</button>
+                        <button class="btn-delete" onclick="deleteContent(${index})">Delete</button>
                     </div>
-                `;
+                `).join('');
             };
 
-            contentList.innerHTML = `
-                <div class="column">
-                    <h2>Unread Content</h2>
-                    ${createColumn(unread)}
-                </div>
-                <div class="column">
-                    <h2>Read Content</h2>
-                    ${createColumn(read)}
-                </div>
-            `;
-        }
-
-        // Toggle Details
-        function toggleDetails(button) {
-            const content = button.nextElementSibling;
-            content.classList.toggle('active');
-            button.classList.toggle('active');
+            document.getElementById('unread-column').innerHTML = createColumn(unread);
+            document.getElementById('read-column').innerHTML = createColumn(read);
         }
 
         // Filter Content
