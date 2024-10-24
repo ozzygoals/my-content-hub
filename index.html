@@ -26,7 +26,7 @@
             padding: 10px;
             border-radius: 5px;
             background-color: #fff;
-            cursor: move;
+            position: relative;
         }
         .active {
             background-color: #e6f7ff;
@@ -54,6 +54,13 @@
             padding: 10px;
             margin: 10px 0;
             border-radius: 5px;
+        }
+        input[type="text"], input[type="url"], select {
+            width: calc(100% - 20px);
+            padding: 5px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 3px;
         }
     </style>
 </head>
@@ -117,16 +124,29 @@
             const createColumn = (contents) => {
                 return contents.map((content, index) => `
                     <div class="content-card" draggable="true" ondragstart="drag(event, ${index})">
-                        <strong>${content.title}</strong>
-                        <p>${content.description || 'No description provided.'}</p>
-                        <button class="btn" onclick="editContent(${index})">Edit</button>
-                        <button class="btn-delete" onclick="deleteContent(${index})">Delete</button>
+                        <input type="text" value="${content.title}" onblur="updateContent(${index}, 'title', this.value)" />
+                        <input type="text" value="${content.description || 'No description provided.'}" onblur="updateContent(${index}, 'description', this.value)" />
+                        <input type="url" value="${content.url}" onblur="updateContent(${index}, 'url', this.value)" />
+                        <select onblur="updateContent(${index}, 'type', this.value)">
+                            <option value="Article" ${content.type === 'Article' ? 'selected' : ''}>Article</option>
+                            <option value="Video" ${content.type === 'Video' ? 'selected' : ''}>Video</option>
+                            <option value="Podcast" ${content.type === 'Podcast' ? 'selected' : ''}>Podcast</option>
+                        </select>
+                        <input type="text" value="${content.priority}" onblur="updateContent(${index}, 'priority', this.value)" />
+                        <button class="btn" onclick="deleteContent(${index})">Delete</button>
                     </div>
                 `).join('');
             };
 
             document.getElementById('unread-column').innerHTML = createColumn(unread);
             document.getElementById('read-column').innerHTML = createColumn(read);
+        }
+
+        // Update Content
+        function updateContent(index, field, value) {
+            contentArray[index][field] = value;
+            localStorage.setItem('contents', JSON.stringify(contentArray));
+            displaySavedContent();
         }
 
         // Filter Content
@@ -153,25 +173,6 @@
         // Delete Content
         function deleteContent(index) {
             contentArray.splice(index, 1);
-            localStorage.setItem('contents', JSON.stringify(contentArray));
-            displaySavedContent();
-        }
-
-        // Edit Content
-        function editContent(index) {
-            const content = contentArray[index];
-            const title = prompt('Edit Title:', content.title);
-            const description = prompt('Edit Description:', content.description);
-            const url = prompt('Edit URL:', content.url);
-            const type = prompt('Edit Type:', content.type);
-            const priority = prompt('Edit Priority:', content.priority);
-
-            if (title !== null) contentArray[index].title = title;
-            if (description !== null) contentArray[index].description = description;
-            if (url !== null) contentArray[index].url = url;
-            if (type !== null) contentArray[index].type = type;
-            if (priority !== null) contentArray[index].priority = priority;
-
             localStorage.setItem('contents', JSON.stringify(contentArray));
             displaySavedContent();
         }
