@@ -154,8 +154,32 @@
                 <p><strong>Content Type:</strong> ${content.type}</p>
                 <div class="button-container">
                     <button onclick="toggleConsume(${index})">${isConsumed ? 'Mark as Unconsumed' : 'Mark as Consumed'}</button>
-                    <button onclick="editContent(${index})">Edit</button>
+                    <button onclick="startEdit(${index})">Edit</button>
                     <button onclick="deleteContent(${index})">Delete</button>
+                </div>
+                <div id="edit-container-${index}" class="edit-container" style="display:none;">
+                    <h4>Edit Content</h4>
+                    <label for="edit-content-title-${index}">Title:</label>
+                    <input type="text" id="edit-content-title-${index}" value="${content.title}">
+                    <label for="edit-content-url-${index}">Content URL:</label>
+                    <input type="url" id="edit-content-url-${index}" value="${content.url}">
+                    <label for="edit-content-tags-${index}">Tags:</label>
+                    <input type="text" id="edit-content-tags-${index}" value="${content.tags.join(', ')}">
+                    <label for="edit-content-priority-${index}">Priority Level:</label>
+                    <select id="edit-content-priority-${index}">
+                        <option value="Low" ${content.priority === "Low" ? 'selected' : ''}>Low</option>
+                        <option value="Medium" ${content.priority === "Medium" ? 'selected' : ''}>Medium</option>
+                        <option value="High" ${content.priority === "High" ? 'selected' : ''}>High</option>
+                    </select>
+                    <label for="edit-content-type-${index}">Content Type:</label>
+                    <select id="edit-content-type-${index}">
+                        <option value="Video" ${content.type === "Video" ? 'selected' : ''}>Video</option>
+                        <option value="Podcast" ${content.type === "Podcast" ? 'selected' : ''}>Podcast</option>
+                        <option value="Article" ${content.type === "Article" ? 'selected' : ''}>Article</option>
+                        <option value="Book" ${content.type === "Book" ? 'selected' : ''}>Book</option>
+                    </select>
+                    <button onclick="saveEdit(${index})">Save Changes</button>
+                    <button onclick="cancelEdit(${index})">Cancel</button>
                 </div>
             `;
             return contentDiv;
@@ -200,23 +224,47 @@
             displaySavedContent();
         }
 
-        function editContent(index) {
-            const content = savedContent[index];
-            document.getElementById('content-title').value = content.title;
-            document.getElementById('content-url').value = content.url;
-            document.getElementById('content-tags').value = content.tags.join(', ');
-            document.getElementById('content-priority').value = content.priority;
-            document.getElementById('content-type').value = content.type;
-            currentEditIndex = index;
-        }
-
         function deleteContent(index) {
             savedContent.splice(index, 1);
             localStorage.setItem('savedContent', JSON.stringify(savedContent));
             displaySavedContent();
         }
 
-        displaySavedContent(); // Initial display
+        function startEdit(index) {
+            currentEditIndex = index;
+            const contentDiv = document.getElementById(`edit-container-${index}`);
+            contentDiv.style.display = 'block'; // Show edit container
+        }
+
+        function saveEdit(index) {
+            const title = document.getElementById(`edit-content-title-${index}`).value;
+            const url = document.getElementById(`edit-content-url-${index}`).value;
+            const tags = document.getElementById(`edit-content-tags-${index}`).value.split(',').map(tag => tag.trim());
+            const priority = document.getElementById(`edit-content-priority-${index}`).value;
+            const contentType = document.getElementById(`edit-content-type-${index}`).value;
+
+            const contentObject = {
+                title: title,
+                url: url,
+                tags: tags,
+                priority: priority,
+                description: '', // Still no description gathering from metadata
+                type: contentType,
+                consumed: savedContent[index].consumed // Keep consumed status
+            };
+
+            savedContent[index] = contentObject;
+            localStorage.setItem('savedContent', JSON.stringify(savedContent));
+            displaySavedContent();
+        }
+
+        function cancelEdit(index) {
+            const contentDiv = document.getElementById(`edit-container-${index}`);
+            contentDiv.style.display = 'none'; // Hide edit container
+            currentEditIndex = -1; // Reset current edit index
+        }
+
+        displaySavedContent(); // Initial display of saved content
     </script>
 </body>
 </html>
