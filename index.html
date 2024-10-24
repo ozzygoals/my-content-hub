@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Video Metadata Saver</title>
+    <title>Content Metadata Manager</title>
     <style>
         body { font-family: Arial, sans-serif; }
         form { margin-bottom: 20px; }
@@ -14,7 +14,7 @@
     </style>
 </head>
 <body>
-    <h1>YouTube Video Metadata Saver</h1>
+    <h1>Content Metadata Manager</h1>
     
     <!-- Filter Input -->
     <input type="text" id="filter-input" placeholder="Filter by Tags or Keywords" oninput="filterContent()">
@@ -57,7 +57,7 @@
                     <p><strong>Tags:</strong> ${content.tags.join(', ')}</p>
                     <p><strong>Priority:</strong> ${content.priority}</p>
                     <p><strong>Description:</strong> ${content.description}</p>
-                    <img src="${content.image}" alt="Video Thumbnail">
+                    <img src="${content.image}" alt="Video Thumbnail" style="max-width:100px;">
                     <div class="button-container">
                         <button onclick="consumeVideo('${content.url}')">Consume</button>
                         <button onclick="editContent(${index})">Edit</button>
@@ -83,7 +83,7 @@
                     <p><strong>Tags:</strong> ${content.tags.join(', ')}</p>
                     <p><strong>Priority:</strong> ${content.priority}</p>
                     <p><strong>Description:</strong> ${content.description}</p>
-                    <img src="${content.image}" alt="Video Thumbnail">
+                    <img src="${content.image}" alt="Content Thumbnail" style="max-width:100px;">
                     <div class="button-container">
                         <button onclick="consumeVideo('${content.url}')">Consume</button>
                         <button onclick="editConsumedContent(${index})">Edit</button>
@@ -102,13 +102,13 @@
             const tags = document.getElementById('content-tags').value.split(',').map(tag => tag.trim());
             const priority = document.getElementById('content-priority').value;
 
-            // Extract video ID from the URL for YouTube
-            const videoId = url.includes('youtube.com') ? url.split('v=')[1]?.split('&')[0] || url.split('/').pop() : null;
-            let description = '';
-            let image = '';
+            // Initialize description and image
+            let description = 'No description available.';
+            let image = 'https://via.placeholder.com/150'; // Placeholder image if none found
 
             // Fetch metadata from the YouTube API if it is a YouTube URL
-            if (videoId) {
+            if (url.includes('youtube.com')) {
+                const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
                 const apiKey = 'AIzaSyCq9q77OarbSy9FwJPr9aCmsgjc-f7dXT8'; // Your YouTube Data API key
                 const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`);
                 if (response.ok) {
@@ -132,8 +132,8 @@
                 url: url,
                 tags: tags,
                 priority: priority,
-                description: description || 'No description available.',
-                image: image || 'https://via.placeholder.com/150' // Placeholder image if none found
+                description: description,
+                image: image
             };
 
             if (currentEditIndex > -1) {
@@ -178,7 +178,7 @@
             document.getElementById('content-priority').value = content.priority;
 
             // Set the current edit index
-            currentEditIndex = index + savedContent.length; // Ensure unique index for consumed content
+            currentEditIndex = -1; // Reset edit index for consumed content
         }
 
         function deleteContent(index) {
