@@ -6,12 +6,14 @@
     <title>Curatorer</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 20px;
             padding: 0;
+            background-color: #f4f4f4;
         }
         h1 {
             text-align: center;
+            color: #333;
         }
         .form-group {
             margin-bottom: 15px;
@@ -19,20 +21,41 @@
         label {
             display: block;
             margin-bottom: 5px;
+            color: #555;
         }
         input, select, textarea {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
             box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #007bff;
+            outline: none;
         }
         button {
             padding: 10px 15px;
             margin-top: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
         }
         .content-item {
+            background-color: white;
             border: 1px solid #ccc;
+            border-radius: 4px;
             margin-top: 10px;
             overflow: hidden; /* Ensures collapsible content is hidden properly */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .consumed {
             text-decoration: line-through;
@@ -46,15 +69,21 @@
             padding: 10px;
             border: 1px solid #ccc;
             margin-bottom: 10px;
-            background-color: #f1f1f1;
+            background-color: #e7f3ff;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .collapsible:hover {
+            background-color: #d0e4ff;
         }
         .content-details {
             display: none; /* Initially hidden */
             padding: 10px;
             background-color: #f9f9f9;
+            border-top: 1px solid #ccc;
         }
         .content-columns {
             display: flex;
@@ -67,7 +96,7 @@
             display: none;
         }
         a {
-            color: blue;
+            color: #007bff;
             font-weight: bold;
             text-decoration: none;
         }
@@ -193,19 +222,19 @@
                             <option value="book" ${content.type === 'book' ? 'selected' : ''}>Book</option>
                         </select>
                         <button onclick="toggleEdit(${index}, false)">Save</button>
+                        <button onclick="toggleEdit(${index}, true)">Cancel</button>
                     `;
                 } else {
                     details.innerHTML = `
-                        <p><strong>Tags:</strong> ${content.tags.join(', ')}</p>
-                        <p><strong>Priority:</strong> ${content.priority}</p>
-                        <p><strong>Type:</strong> ${content.type}</p>
-                        <p><strong>Description:</strong> ${content.description || 'No description'}</p>
+                        <strong>Description:</strong> ${content.description} <br>
+                        <strong>Tags:</strong> ${content.tags.join(', ')} <br>
+                        <strong>Priority:</strong> ${content.priority} <br>
+                        <strong>Type:</strong> ${content.type}
                     `;
                 }
 
                 contentItem.appendChild(collapsibleTitle);
                 contentItem.appendChild(details);
-                
                 if (content.consumed) {
                     completeContent.appendChild(contentItem);
                 } else {
@@ -214,36 +243,52 @@
             });
         }
 
-        function toggleDetails(event, uniqueID) {
-            const contentDetails = document.getElementById(uniqueID);
-            contentDetails.style.display = contentDetails.style.display === 'block' ? 'none' : 'block';
-        }
-
         function toggleForm() {
-            const contentForm = document.getElementById('content-form');
-            contentForm.classList.toggle('hidden');
+            const form = document.getElementById('content-form');
+            form.classList.toggle('hidden');
+            form.reset(); // Reset the form when toggled open
+            currentEditIndex = -1; // Reset the edit index
         }
 
         function saveContent() {
             const title = document.getElementById('content-title').value;
-            const url = document.getElementById('content-url').value || '#';
+            const url = document.getElementById('content-url').value;
             const tags = document.getElementById('content-tags').value.split(',').map(tag => tag.trim());
             const priority = document.getElementById('content-priority').value;
             const type = document.getElementById('content-type').value;
             const description = document.getElementById('content-description').value;
 
-            const newContent = { title, url, tags, priority, type, description, consumed: false, editMode: false };
+            if (title && url) {
+                if (currentEditIndex >= 0) {
+                    savedContent[currentEditIndex] = {
+                        title,
+                        url,
+                        tags,
+                        priority,
+                        type,
+                        description,
+                        consumed: savedContent[currentEditIndex].consumed,
+                        editMode: false // Reset to normal mode after saving
+                    };
+                } else {
+                    savedContent.push({
+                        title,
+                        url,
+                        tags,
+                        priority,
+                        type,
+                        description,
+                        consumed: false,
+                        editMode: false // New item starts in normal mode
+                    });
+                }
 
-            if (currentEditIndex === -1) {
-                savedContent.push(newContent);
+                localStorage.setItem('savedContent', JSON.stringify(savedContent));
+                displaySavedContent();
+                toggleForm();
             } else {
-                savedContent[currentEditIndex] = newContent;
-                currentEditIndex = -1;
+                alert('Title and URL are required.');
             }
-
-            localStorage.setItem('savedContent', JSON.stringify(savedContent));
-            displaySavedContent();
-            toggleForm();
         }
 
         function toggleConsume(index) {
@@ -252,32 +297,52 @@
             displaySavedContent();
         }
 
+        function startEdit(index) {
+            currentEditIndex = index; // Set the current edit index
+            savedContent[index].editMode = true; // Enable edit mode
+            localStorage.setItem('savedContent', JSON.stringify(savedContent));
+            displaySavedContent(); // Refresh display
+        }
+
+        function toggleEdit(index, cancel) {
+            if (cancel) {
+                savedContent[index].editMode = false; // Cancel edit mode
+            } else {
+                savedContent[index].editMode = false; // Save
+                savedContent[index].title = document.getElementById(`content-${index}-title`).value; // Update title
+                savedContent[index].url = document.getElementById(`content-${index}-url`).value; // Update URL
+                savedContent[index].description = document.getElementById(`content-${index}-description`).value; // Update description
+                savedContent[index].tags = document.getElementById(`content-${index}-tags`).value.split(',').map(tag => tag.trim()); // Update tags
+                savedContent[index].priority = document.getElementById(`content-${index}-priority`).value; // Update priority
+                savedContent[index].type = document.getElementById(`content-${index}-type`).value; // Update type
+            }
+            localStorage.setItem('savedContent', JSON.stringify(savedContent));
+            displaySavedContent(); // Refresh display
+        }
+
+        function editField(index, field, value) {
+            savedContent[index][field] = value;
+            localStorage.setItem('savedContent', JSON.stringify(savedContent));
+        }
+
         function deleteContent(index) {
             savedContent.splice(index, 1);
             localStorage.setItem('savedContent', JSON.stringify(savedContent));
             displaySavedContent();
         }
 
-        function startEdit(index) {
-            toggleEdit(index, true);
-        }
-
-        function toggleEdit(index, mode) {
-            savedContent[index].editMode = mode;
-            localStorage.setItem('savedContent', JSON.stringify(savedContent));
-            displaySavedContent();
-        }
-
-        function editField(index, field, value) {
-            savedContent[index][field] = value;
+        function toggleDetails(event, uniqueID) {
+            const details = document.getElementById(uniqueID);
+            if (details) {
+                details.style.display = details.style.display === 'block' ? 'none' : 'block'; // Toggle visibility
+            }
         }
 
         function filterContent() {
-            displaySavedContent();
+            displaySavedContent(); // Refresh display based on filter
         }
 
-        // Initialize display
-        displaySavedContent();
+        displaySavedContent(); // Initial display of saved content
     </script>
 </body>
 </html>
